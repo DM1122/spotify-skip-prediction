@@ -1,0 +1,78 @@
+[tool.poetry]
+name = "spotify-skip-prediction"
+version = "0.1.0"
+description = ""
+authors = ["DM1122 <34867698+DM1122@users.noreply.github.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+plotly = "^4.14.3"
+torch = "^1.8.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+docformatter = "^1.4"
+black = "^21.5b1"
+isort = "^5.8.0"
+pre-commit = "^2.13.0"
+flakehell = "^0.9.0"
+pytest-html = "^3.1.1"
+flake8-blind-except = "^0.2.0"
+flake8-bugbear = "^21.4.3"
+flake8-builtins = "^1.5.3"
+flake8-comprehensions = "^3.5.0"
+flake8-docstrings = "^1.6.0"
+flake8-eradicate = "^1.0.0"
+flake8-isort = "^4.0.0"
+flake8-mutable = "^1.2.0"
+flake8-pep3101 = "^1.3.0"
+mccabe = "^0.6.1"
+pep8-naming = "^0.11.1"
+pycodestyle = "^2.7.0"
+pyflakes = "^2.3.1"
+pylint = "^2.8.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+sections="FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
+import_heading_stdlib="stdlib"
+import_heading_thirdparty="external"
+import_heading_firstparty="project"
+
+[tool.black]
+line-length = 88
+
+[tool.flakehell]
+format = "colored"
+max_line_length = 88
+show_source = true
+exclude = ["*.ipynb"]
+
+[tool.flakehell.plugins]
+flake8-blind-except = ["+*"]
+flake8-bugbear = ["+*", "-B305"]
+flake8-builtins = ["+*"]
+flake8-comprehensions = ["+*"]
+flake8-docstrings = ["+*"]
+flake8-eradicate = ["+*", "-E800"]
+flake8-isort = ["+*"]
+flake8-mutable = ["+*"]
+flake8-pep3101 = ["+*","-S001"]
+mccabe = ["+*"]
+pep8-naming = ["+*","-N806","-N803"]
+pycodestyle = ["+*","-E203","-W503", "-E501", "-E999"]
+pyflakes = ["+*"]
+pylint = ["+*", "-C0103", "-R0913", "-R0914", "-C0104", "-C0301", "-W0104", "-E800", "-C0200", "-C0116"]
+
+
+[tool.pytest.ini_options]
+addopts = "--html=logs/pytest-report.html --self-contained-html" 
+testpaths = ["tests"]
+markers = [
+    "slow: tests that are slow to run (deselect with '-m \"not slow\"').",
+    "plot: tests that produce plots."
+]

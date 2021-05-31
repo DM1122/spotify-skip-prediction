@@ -1,0 +1,22 @@
+repos:
+- repo: https://github.com/pre-commit/mirrors-isort
+  rev: v5.8.0
+  hooks:
+  - id: isort
+
+- repo: https://github.com/myint/docformatter
+  rev: v1.3.1
+  hooks:
+  - id: docformatter
+    args: [--wrap-summaries=80,--wrap-descriptions=72,--blank,--in-place]
+
+- repo: https://github.com/psf/black
+  rev: 21.5b1
+  hooks:
+  - id: black
+    language_version: python3.7
+
+- repo: https://github.com/life4/flakehell
+  rev: v.0.8.0
+  hooks:
+  - id: flakehell

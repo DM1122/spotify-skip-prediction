@@ -5,7 +5,16 @@
 [![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/DM1122/spotify-skip-prediction)](https://github.com/DM1122/spotify-skip-prediction)
 
 # Spotify Skip Prediction
+<p align="left"><img src="img/spotify-logo.png" height="64"></p>
 APS360 project repository
+
+TODO: Add project description
+
+# Systems
+<p align="center"><img src="img/system-diagram.png" height="256"></p>
+
+# Project Management
+See the repo's [project page](https://github.com/DM1122/spotify-skip-prediction/projects/1) for ongoing tasks.
 
 # Contribution
 ## Setup
@@ -47,15 +56,15 @@ $ isort . & docformatter . & black . & flakehell lint
 ```
 
 ### The 5 Rules of A Great Git Commit Message
-<p align="center"><img src="https://imgs.xkcd.com/comics/git_commit.png" width="256"></p>
+<p align="center"><img src="https://imgs.xkcd.com/comics/git_commit.png" height=200"></p>
 
-1. Write in the imperative
-1. Capitalize first letter in the subject line 
-1. Describe what was done and why, but not how
-1. Limit subject line to 50 characters
-1. End without a period
+1. Write in the imperative.
+1. Capitalize first letter in the subject line.
+1. Describe what was done and why, but not how.
+1. Limit subject line to 50 characters.
+1. End without a period.
 
-# Testing
+## Testing
 
 This repo uses [pytest](https://docs.pytest.org/en/6.2.x/) for unit testing. To run unit tests, call:
 

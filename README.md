@@ -73,7 +73,7 @@ def my_test_function():
     # some test
 ```
 
-To use the custom marker `foo`, it must be added to the list of custom pytest markers in `pyproject.toml>[tool.pytest.ini_options]>markers`. All the tests marked with `foo` can be run by calling:
+To use the custom marker `foo`, it must be added to the list of custom pytest markers in `pyproject.toml>[tool.pytest.ini_options]>markers`. The tests marked with `foo` can then be run by calling:
 ```
 $ pytest -m foo
 ```

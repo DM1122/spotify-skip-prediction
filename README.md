@@ -45,6 +45,40 @@ pre-commit install --install-hooks
 
 You're now ready to start contributing!
 
+## Adding Packages
+To add a new package to the poetry virtual environment, install it via:
+```
+$ poetry add <PACKAGE>
+```
+This is poetry's version of `pip install <PACKAGE>`.
+
+
+## Testing
+This repo uses [pytest](https://docs.pytest.org/en/6.2.x/) for unit testing. To run all unit tests, call:
+
+```
+$ pytest
+```
+
+You can find an interactive report of test results in `./logs/pytest-report.html`. Indivdual tests can also be specified as follows:
+```
+$ pytest tests/test_main.py::my_test_function
+```
+
+Groups of tests can be run using markers. Assign a marker decorator to the group of functions you want to test like this:
+
+```
+@pytest.mark.foo
+def my_test_function():
+    # some test
+```
+
+To use the custom marker `foo`, it must be added to the list of custom pytest markers in `pyproject.toml>[tool.pytest.ini_options]>markers`. All the tests marked with `foo` can be run by calling:
+```
+$ pytest -m foo
+```
+
+
 ## Commits
 ### Pre-Commit
 This repo is configured to use [pre-commit](https://pre-commit.com/) hooks. The pre-commit pipeline is as follows:
@@ -69,12 +103,6 @@ $ isort . & docformatter --in-place -r . & black . & pylint_runner
 1. Limit subject line to 50 characters.
 1. End without a period.
 
-## Testing
 
-This repo uses [pytest](https://docs.pytest.org/en/6.2.x/) for unit testing. To run unit tests, call:
 
-```
-$ pytest
-```
 
-You can find an interactive report of test results in `./logs/pytest-report.html`.

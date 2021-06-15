@@ -8,6 +8,7 @@ authors = ["DM1122 <34867698+DM1122@users.noreply.github.com>"]
 plotly = "^4.14.3"
 python = "^3.7"
 torch = "^1.8.1"
+torchinfo = "^1.4.4"
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b1"
@@ -15,8 +16,9 @@ docformatter = "^1.4"
 isort = "^5.8.0"
 pre-commit = "^2.13.0"
 pylint = "^2.8.3"
-pytest = "^5.2"
+pytest = "^6.0"
 pylint-runner = "^0.6.0"
+pytest-html = "^3.1.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

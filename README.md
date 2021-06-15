@@ -57,7 +57,7 @@ This is poetry's version of `pip install <PACKAGE>`.
 This repo uses [pytest](https://docs.pytest.org/en/6.2.x/) for unit testing. To run all unit tests, call:
 
 ```
-pytest
+pytest -v
 ```
 
 You can find an interactive report of test results in `./logs/pytest-report.html`. Indivdual tests can also be specified as follows:

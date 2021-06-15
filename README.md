@@ -84,14 +84,13 @@ pytest -m foo
 This repo is configured to use [pre-commit](https://pre-commit.com/) hooks. The pre-commit pipeline is as follows:
 
 1. [Isort](https://pycqa.github.io/isort/): Sorts imports, so you don't have to.
-1. [Docformatter](https://github.com/myint/docformatter): Docstring formatter for those extra long docstrings.
 1. [Black](https://black.readthedocs.io/en/stable/): The uncompromising code autoformatter.
 1. [Pylint](https://github.com/pycqa/pylint): It's not just a linter that annoys you!
 
 Pre-commit will run the hooks on commit, but when a hook fails, they can be run manually to debug using:
 
 ```
-isort . & docformatter --in-place -r . & black . & pylint_runner
+isort . & black . & pylint_runner
 ```
 
 ### The 5 Rules of A Great Git Commit Message

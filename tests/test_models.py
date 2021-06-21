@@ -1,4 +1,4 @@
-"""Tests for models.py."""
+"""Tests for model architectures."""
 
 # external
 import numpy as np
@@ -7,6 +7,10 @@ import torchinfo
 
 # project
 from core import models
+
+
+def test_linearparametric():
+    """WIP."""
 
 
 def test_autoencoder():
@@ -19,14 +23,7 @@ def test_autoencoder():
     torchinfo.summary(
         model=model,
         input_data=data,
-        col_names=(
-            "input_size",
-            "output_size",
-            "num_params",
-            "kernel_size",
-            "mult_adds",
-        ),
-        verbose=2,
+        col_names=("input_size", "output_size", "num_params"),
     )
 
     output = model(data)

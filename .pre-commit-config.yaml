@@ -14,5 +14,5 @@ repos:
   rev: v2.8.3
   hooks:
   - id: pylint
-    additional_dependencies: ["plotly","torch","torchinfo","pandas"] # https://stackoverflow.com/questions/61238318/pylint-and-pre-commit-hook-unable-to-import
+    additional_dependencies: ["plotly","torch","torchinfo","pandas","torchvision","pytest","scikit-learn"] # https://stackoverflow.com/questions/61238318/pylint-and-pre-commit-hook-unable-to-import
   

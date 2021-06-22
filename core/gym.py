@@ -238,7 +238,7 @@ class SummaryWriter(tensorboard.SummaryWriter):
 
     def add_hparams(self, hparam_dict, metric_dict):
         torch._C._log_api_usage_once("tensorboard.logging.add_hparams")
-        if isinstance(hparam_dict) is not dict or isinstance(metric_dict) is not dict:
+        if not isinstance(hparam_dict, dict) or not isinstance(metric_dict, dict):
             raise TypeError("hparam_dict and metric_dict should be dictionary.")
         exp, ssi, sei = torch.utils.tensorboard.summary.hparams(
             hparam_dict, metric_dict

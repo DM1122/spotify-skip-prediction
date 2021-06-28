@@ -78,7 +78,8 @@ def test_trainer_classification():
         device=device,
         logname="test_classification",
     )
-    trainer.train(iterations=100)
+    tb = trainer.train(iterations=100)
+    tb.close()
 
     loss_valid, acc_valid = trainer.test(dataloader=dataloader_valid)
     print(
@@ -155,9 +156,17 @@ def test_trainer_unsupervised():
         device=device,
         logname="test_unsupervised",
     )
-    trainer.train(iterations=100)
+    tb = trainer.train(iterations=100)
+    tb.close()
 
     loss_valid, acc_valid = trainer.test(dataloader=dataloader_valid)
     print(
         f"\nValidation loss:\t{loss_valid:.3f}\tValidation acc:\t{acc_valid*100:.2f}%"
     )
+
+
+def test_tuner_unsupervised():
+    """Test tuner at unsupervised task using wine dataset and autoencoder model."""
+
+    tuner = gym.Tuner_Autoencoder()
+    tuner.tune(n_calls=4)

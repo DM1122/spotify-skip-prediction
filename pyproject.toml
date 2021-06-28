@@ -14,6 +14,8 @@ torchvision = "^0.10.0"
 alive-progress = "^1.6.2"
 tensorboard = "^2.5.0"
 scikit-learn = "^0.24.2"
+scikit-optimize = "^0.8.1"
+matplotlib = "^3.4.2"
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b1"
@@ -48,7 +50,7 @@ line-length = 88
 
 [tool.pylint.messages_control]
 max-line-length = 88
-disable = ["invalid-name","too-many-arguments", "too-many-locals", "arguments-differ", "unnecessary-lambda", "too-many-instance-attributes", "bare-except", "protected-access"]
+disable = ["invalid-name","too-many-arguments", "too-many-locals", "arguments-differ", "unnecessary-lambda", "too-many-instance-attributes", "bare-except", "protected-access", "duplicate-code", "too-few-public-methods"]
 generated-members=["numpy.*","torch.*"] # https://github.com/pytorch/pytorch/issues/701
 
 

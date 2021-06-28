@@ -1,12 +1,20 @@
 """A gym for getting those models in shape."""
 
 # stdlib
+import winsound
 from datetime import datetime
 
 # external
+import sklearn
+import skopt
 import torch
 import torchvision
+from sklearn import datasets as skd
 from torch.utils import tensorboard
+
+# project
+from core import models
+from libs import plotlib
 
 
 class Trainer:
@@ -65,6 +73,10 @@ class Trainer:
         Args:
             iterations (int): Number of training iterations. Each iteration is composed
                 of a forward and backwards pass.
+        Returns:
+            SummaryWriter: The tensorboard SummaryWriter object for the run. Used by
+            Tuner to log hyperparameters after run. Must call SummaryWriter.close()
+            after usage.
         """
         i = 0
         epoch = 1
@@ -91,15 +103,13 @@ class Trainer:
                     self.__checkpoint(step=i, inputs=inputs, labels=labels)
 
                 if i >= iterations:
-                    self.__checkpoint(
-                        step=i, inputs=inputs, labels=labels, log_hparam=True
-                    )
+                    self.__checkpoint(step=i, inputs=inputs, labels=labels)
                     break
 
             epoch += 1
 
         print("Done!")
-        self.tb.close()
+        return self.tb
 
     def test(self, dataloader):
         """Computes test loss and accuracy metrics using a given dataloader
@@ -135,7 +145,7 @@ class Trainer:
 
         return loss, acc
 
-    def __checkpoint(self, step, inputs=None, labels=None, log_hparam=False):
+    def __checkpoint(self, step, inputs=None, labels=None):
         """Conducts a checkpoint of the current model state by testing and logging to
         Tensorboard.
 
@@ -147,9 +157,6 @@ class Trainer:
             labels (torch.Tensor, optional): Labels of current batch. Defaults to None.
                 If None, will sample a batch from dataloader. Useful when checkpointing
                 before first forward pass is done.
-            log_hparam (bool, optional): Logs the hyperameters and final test metrics
-                for the run. Should be set to True at the end of model training, but not
-                before. Defaults to False.
         """
         if inputs is None or labels is None:  # checkpoint running at iteration 0
             inputs, labels = next(iter(self.dataloader_train))
@@ -212,22 +219,194 @@ class Trainer:
         img_grid = torchvision.utils.make_grid(logits)
         self.tb.add_image(tag="Output", img_tensor=img_grid, global_step=step)
 
-        # log hparams
-        if log_hparam is True:
-            self.tb.add_hparams(
-                hparam_dict={
-                    "lr": self.optimizer.param_groups[0]["lr"],
-                    "bs": self.dataloader_train.batch_size,
-                },
-                metric_dict={"Metric/loss": loss_test, "Metric/acc": acc_test},
-            )
-
         # display
         print()
         print(f"Iteration {step} stats:")
         print(f"Examples seen:\t{step*self.dataloader_train.batch_size}")
         print(f"Train loss:\t{loss_train:.3f}\tTest loss:\t{loss_test:.3f}")
         print(f"Train acc:\t{acc_train*100:.2f}%\tTest acc:\t{acc_test*100:.2f}%")
+
+
+class Tuner:
+    """A tuner for hyperparameter optimization. All model-specific tuners must subclass
+    from this class."""
+
+    def __init__(self):
+        self.device = get_device()
+
+        # the following must be defined in derived classes:
+        self.space = None
+
+    def tune(self, n_calls):
+        """Tunes the defined black box function according to the defined hyperparamter
+        space.
+
+        Args:
+            n_calls (int): Number of calls to black box function. Must be greater than
+                or equal to 3.
+        """
+        assert (
+            n_calls >= 3
+        ), "Tuner failed. Number of calls  must be greater than or equal to 3."
+        print("Tuner: Starting optimization")
+        opt_res = skopt.gp_minimize(
+            func=self.__blackbox,
+            dimensions=self.space,
+            base_estimator=None,
+            n_calls=n_calls,
+            n_initial_points=3,
+            initial_point_generator="random",
+            acq_func="gp_hedge",
+            acq_optimizer="sampling",
+            x0=None,
+            y0=None,
+            random_state=420,
+            verbose=True,
+            callback=self.__callback,
+            n_points=10000,
+            n_restarts_optimizer=None,
+            xi=0.01,
+            kappa=1.96,
+            noise="gaussian",
+            n_jobs=None,
+            model_queue_size=None,
+        )
+
+        print("Hyperparameter optimization results:")
+        print(f"Location of min:\t{opt_res.x}")
+        print(f"Function value at min:\t{opt_res.fun}")
+
+        # region plots
+        time = datetime.now().strftime("%Y%m%d-%H%M%S")
+        plotlib.plot_skopt_evaluations(opt_res, f"logs/tuner/{time}/")
+        plotlib.plot_skopt_objective(opt_res, f"logs/tuner/{time}/")
+        plotlib.plot_skopt_convergence(opt_res, f"logs/tuner/{time}/")
+        plotlib.plot_skopt_regret(opt_res, f"logs/tuner/{time}/")
+        # endregion
+
+        winsound.MessageBeep()
+
+    def __blackbox(self, params):
+        """The blackbox function to be optimized.
+
+        Args:
+            params (list): A list of hyperparameters to be evaluated at in the current
+                call to the blackbox function.
+
+        Returns:
+            float: Function loss.
+        """
+        dataloader_train, dataloader_test, _ = self._get_dataloaders(params)
+        model, optimizer, criterion = self._build_model(params)
+
+        trainer = Trainer(
+            model=model,
+            dataloader_train=dataloader_train,
+            dataloader_test=dataloader_test,
+            optimizer=optimizer,
+            criterion=criterion,
+            device=self.device,
+            logname="test_tuner_unsupervised",
+        )
+        tb = trainer.train(iterations=100)
+
+        loss, acc = trainer.test(dataloader=dataloader_test)
+
+        tb.add_hparams(
+            hparam_dict={
+                "lr": float(params[0]),
+                "bs": int(params[1]),
+                "radius": int(params[2]),
+            },
+            metric_dict={"Metric/loss": float(loss), "Metric/acc": float(acc)},
+        )
+        tb.close()
+
+        return float(loss)
+
+    @staticmethod
+    def __callback(opt_res):
+        print(f"Hyperparameters that were just tested: {opt_res.x_iters[-1]}\n")
+
+    def _get_dataloaders(self, params):
+        raise NotImplementedError("Method must be implemented in derived classes.")
+
+    def _build_model(self, params):
+        raise NotImplementedError("Method must be implemented in derived classes.")
+
+
+class Tuner_Autoencoder(Tuner):
+    """A tuner for the autoencoder model."""
+
+    def __init__(self):
+        super().__init__()
+
+        self.space = [
+            skopt.space.space.Real(
+                low=0.0001,
+                high=0.9,
+                name="lr",
+            ),
+            skopt.space.space.Categorical(
+                categories=[1, 4, 8, 16, 32, 64, 128, 256],
+                transform="identity",
+                name="bs",
+            ),
+            skopt.space.space.Categorical(
+                categories=[1, 4, 8], transform="identity", name="radius"
+            ),
+        ]
+
+    def _get_dataloaders(self, params):
+        # region dataset preprocessing
+        features, _ = skd.load_wine(return_X_y=True)
+
+        scaler = sklearn.preprocessing.StandardScaler()
+        features = scaler.fit_transform(X=features)
+
+        dataset = torch.utils.data.TensorDataset(
+            torch.tensor(features, dtype=torch.float),
+            torch.tensor(features, dtype=torch.float),
+        )
+        dataset_train, dataset_test, dataset_valid = torch.utils.data.random_split(
+            dataset=dataset, lengths=(100, 39, 39)
+        )
+        # endregion
+
+        # region dataloaders
+        dataloader_train = torch.utils.data.DataLoader(
+            dataset=dataset_train,
+            batch_size=int(params[1]),
+            shuffle=True,
+            pin_memory=True,
+        )
+        dataloader_test = torch.utils.data.DataLoader(
+            dataset=dataset_test,
+            batch_size=1,
+            shuffle=True,
+            pin_memory=True,
+        )
+        dataloader_valid = torch.utils.data.DataLoader(
+            dataset=dataset_valid,
+            batch_size=1,
+            shuffle=True,
+            pin_memory=True,
+        )
+        # endregion
+
+        return dataloader_train, dataloader_test, dataloader_valid
+
+    def _build_model(self, params):
+        print("Building new Autoencoder model...")
+
+        model = models.AutoEncoder(
+            input_size=13, embed_size=4, radius=int(params[2])
+        ).to(self.device)
+
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=float(params[0]))
+        criterion = torch.nn.MSELoss(reduction="sum")
+
+        return model, optimizer, criterion
 
 
 class SummaryWriter(tensorboard.SummaryWriter):

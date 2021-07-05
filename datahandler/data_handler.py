@@ -9,22 +9,36 @@ Original file is located at
     https://colab.research.google.com/drive/16Lo0OlsI4m2x--frL0F9EZlIkUkBTlpo
 """
 
+# external
+import numpy as np
+
 # from google.colab import drive
 # drive.mount('/content/drive')
 import pandas as pd
-import numpy as np
 
 # old_file=pd.read_csv("/content/drive/MyDrive/Colab Notebooks/APS360/track_list.csv")
-old_file=pd.read_csv("track_list.csv")
+old_file = pd.read_csv("track_list.csv")
 
-# columns to keep from dataset, skip_1 || with skip_2 to make new skip 
+# columns to keep from dataset, skip_1 || with skip_2 to make new skip
 # turns out to be equivalent to skip_2 column
-to_keep=['session_id', 'session_position', 'session_length', 'track_id_clean', 'skip_2']
+to_keep = [
+    "session_id",
+    "session_position",
+    "session_length",
+    "track_id_clean",
+    "skip_2",
+]
 
-new_file=old_file[to_keep]
+new_file = old_file[to_keep]
 
 # change column names.
-new_file.columns=['session_id', 'session_position', 'session_length', 'track_id', 'skip']
+new_file.columns = [
+    "session_id",
+    "session_position",
+    "session_length",
+    "track_id",
+    "skip",
+]
 print(new_file.head())
 
 # save as shortened track_list
@@ -36,16 +50,17 @@ print(new_file.head())
 def mergeLeftInOrder(x, y, on=None):
     x = x.copy()
     x["Order"] = np.arange(len(x))
-    z = x.merge(y, how='left', on=on).set_index("Order").loc[np.arange(len(x)), :]
+    z = x.merge(y, how="left", on=on).set_index("Order").loc[np.arange(len(x)), :]
     return z
 
-# features=pd.read_csv("/content/drive/MyDrive/Colab Notebooks/APS360/track_features.csv")
-features=pd.read_csv("track_features.csv")
 
-merged=mergeLeftInOrder(new_file, features)
+# features=pd.read_csv("/content/drive/MyDrive/Colab Notebooks/APS360/track_features.csv")
+features = pd.read_csv("track_features.csv")
+
+merged = mergeLeftInOrder(new_file, features)
 
 # uncomment if want to remove track_id and session_id columns
-#merged.drop(columns=['track_id', 'session_id'], inplace=True)
+# merged.drop(columns=['track_id', 'session_id'], inplace=True)
 
 # merged.to_csv("/content/drive/MyDrive/Colab Notebooks/APS360/trimmed_merged.csv", index=False)
 merged.to_csv("trimmed_merged.csv", index=False)

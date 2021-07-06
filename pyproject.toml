@@ -16,6 +16,7 @@ tensorboard = "^2.5.0"
 scikit-learn = "^0.24.2"
 scikit-optimize = "^0.8.1"
 matplotlib = "^3.4.2"
+pmdarima = "^1.8.2"
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b1"

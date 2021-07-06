@@ -164,3 +164,44 @@ class AutoEncoder(torch.nn.Module):
         x = self.decoder(x)
 
         return x
+
+
+class RNN(torch.nn.Module):
+    """A reccurrent model architecture. Composed of an RNN module followed by a
+        single dense layer.
+
+    Args:
+        input_size (int): Number of features being passed into the model.
+        hidden_size (int): Size of model's hidden state.
+        num_rnn_layers (int): Number of consecutive RNN layers.
+        output_size (int): Size of output.
+    """
+
+    def __init__(self, input_size, hidden_size, num_rnn_layers, output_size):
+        super().__init__()
+        self.hidden_size = hidden_size
+
+        self.rnn = torch.nn.RNN(
+            input_size=input_size,
+            hidden_size=hidden_size,
+            num_layers=num_rnn_layers,
+            nonlinearity="relu",
+            batch_first=True,
+        )
+        self.fc = torch.nn.Linear(in_features=hidden_size, out_features=output_size)
+
+    def forward(self, x):
+        """Model forward pass.
+
+        Args:
+            x (torch.Tensor): Input to model with shape
+                (# samples, sequence length, # features).
+
+        Returns:
+            torch.Tensor: Model output in many-to-many configuration.
+
+        """
+        x, _ = self.rnn(x)
+        x = self.fc(x)
+
+        return x

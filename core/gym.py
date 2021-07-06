@@ -165,6 +165,8 @@ class Trainer:
         # train loss
         with torch.no_grad():
             logits = self.model(inputs)
+            print(f"Logits ({logits.size()}):\n{logits}")
+            print(f"Labels ({labels.size()}):\n{labels}")
             loss_batch = self.criterion(logits, labels)
 
         loss_train = loss_batch / self.dataloader_train.batch_size
@@ -214,15 +216,21 @@ class Trainer:
 
         # log samples
         img_grid = torchvision.utils.make_grid(inputs)
-        self.tb.add_image(tag="Input", img_tensor=img_grid, global_step=step)
+        try:
+            self.tb.add_image(tag="Input", img_tensor=img_grid, global_step=step)
+        except TypeError:
+            print("WARNING: Cannnot plot image for inputs")
 
         img_grid = torchvision.utils.make_grid(logits)
-        self.tb.add_image(tag="Output", img_tensor=img_grid, global_step=step)
+        try:
+            self.tb.add_image(tag="Output", img_tensor=img_grid, global_step=step)
+        except TypeError:
+            print("WARNING: Cannnot plot image for logits")
 
         # display
         print()
         print(f"Iteration {step} stats:")
-        print(f"Examples seen:\t{step*self.dataloader_train.batch_size}")
+        print(f"Samples seen:\t{step*self.dataloader_train.batch_size}")
         print(f"Train loss:\t{loss_train:.3f}\tTest loss:\t{loss_test:.3f}")
         print(f"Train acc:\t{acc_train*100:.2f}%\tTest acc:\t{acc_test*100:.2f}%")
 

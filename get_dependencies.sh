@@ -1,0 +1,16 @@
+python -m pip install plotly 
+python -m pip install torchinfo 
+python -m pip install pandas 
+python -m pip install torchvision 
+python -m pip install alive-progress 
+python -m pip install tensorboard 
+python -m pip install scikit-learn 
+python -m pip install scikit-optimize 
+python -m pip install matplotlib 
+python -m pip install black 
+python -m pip install isort 
+python -m pip install pre-commit 
+python -m pip install pylint 
+python -m pip install pytest 
+python -m pip install pylint-runner 
+python -m pip install pytest-html 

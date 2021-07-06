@@ -9,51 +9,34 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, plot_confusion_matrix
 from sklearn.model_selection import train_test_split
 
-# Load data??
-# train_data = ... load data from csv?
-# X_train = ... other variables from train_data
-# y_train = ... ground truth? from train_data
+# Load data
+X_train = pd.read_csv("datahandler/trimmed_merged_no_track_id_or_session_id.csv") #load data from csv
+
+drop_columns = ["mode"] # drop unimportant columns
+X_train.drop(labels=drop_columns, axis=1, inplace=True)
+
+y_train = X_train["skip"]
+X_train.drop(labels="skip", axis=1, inplace=True) #ground truth from train_data
 
 # split data 60% train, 20% validation, 20% test
-X_train, X_test, y_train, y_test = train_test_split(
-    X_train, y_train, test_size=0.2, random_state=1
-)
+X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, 
+                            test_size=0.2, random_state=1)
 
-X_train, X_val, y_train, y_val = train_test_split(
-    X_train, y_train, test_size=0.25, random_state=1
-)  # 0.25 x 0.8 = 0.2
+X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, 
+                            test_size=0.25, random_state=1) # 0.25 x 0.8 = 0.2
+
+print("X_train:", len(X_train))
+print("y_train:", len(y_train))
+print("X_val:", len(X_val))
+print("y_val:", len(y_val))
+print("X_test:", len(X_test))
+print("y_test:", len(y_test))
+
 
 # Hyperparameters (96 combinations)
 n_estimators = [1, 10, 20, 50, 100, 200]  # 6 parameters
 lr = [0.001, 0.01, 0.5, 1]  # 4 parameters
 max_depth = [1, 2, 5, 10]  # 4 parameters
-
-
-def tune_parameters(n_estimators, lr, max_depth):
-    model_num = 0
-    cur_train_acc = 0
-    cur_val_acc = 0
-    parameters = np.zeros(3)
-    for estimator in n_estimators:
-        for learn_rate in lr:
-            for depth in max_depth:
-                model_num += 1
-                train_acc, val_acc, model = baseline(
-                    estimator, learn_rate, depth, model_num
-                )
-
-                if (train_acc > cur_train_acc) & (val_acc > cur_val_acc):
-                    cur_train_acc = train_acc
-                    cur_val_acc = val_acc
-                    parameters[0] = estimator
-                    parameters[1] = learn_rate
-                    parameters[2] = depth
-
-    print("Optimized parameters [n_estimators, learning_rate, max_depth]", parameters)
-    print("Optimized training accuracy:", cur_train_acc)
-    print("Optimized validation accuracy:", cur_val_acc)
-    return cur_train_acc, cur_val_acc, parameters
-
 
 def baseline(n_estimators, lr, max_depth, model_num):
     # Gradient boosted trees
@@ -81,6 +64,30 @@ def baseline(n_estimators, lr, max_depth, model_num):
 
     return train_acc, val_acc, baseline_model
 
+def tune_parameters(n_estimators, lr, max_depth):
+    model_num = 0
+    cur_train_acc = 0
+    cur_val_acc = 0
+    parameters = np.zeros(3)
+    for estimator in n_estimators:
+        for learn_rate in lr:
+            for depth in max_depth:
+                model_num += 1
+                train_acc, val_acc, model = baseline(
+                    estimator, learn_rate, depth, model_num
+                )
+
+                if (train_acc > cur_train_acc) & (val_acc > cur_val_acc):
+                    cur_train_acc = train_acc
+                    cur_val_acc = val_acc
+                    parameters[0] = estimator
+                    parameters[1] = learn_rate
+                    parameters[2] = depth
+
+    print("Optimized parameters [n_estimators, learning_rate, max_depth]", parameters)
+    print("Optimized training accuracy:", cur_train_acc)
+    print("Optimized validation accuracy:", cur_val_acc)
+    return cur_train_acc, cur_val_acc, parameters
 
 # Final test accuracy
 def get_test_accuracy(model, X_test, y_test):

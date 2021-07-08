@@ -1,5 +1,6 @@
 """Helper functions for generating plots."""
 # stdlib
+import logging
 import os
 
 # external
@@ -8,6 +9,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from skopt import plots as skplot
 
+LOG = logging.getLogger(__name__)
 matplotlib.use("TkAgg")
 
 

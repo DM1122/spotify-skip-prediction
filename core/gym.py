@@ -1,6 +1,8 @@
 """A gym for getting those models in shape."""
 
 # stdlib
+import logging
+import os
 import winsound
 from datetime import datetime
 
@@ -15,6 +17,8 @@ from torch.utils import tensorboard
 # project
 from core import models
 from libs import plotlib
+
+LOG = logging.getLogger(__name__)
 
 
 class Trainer:
@@ -81,10 +85,11 @@ class Trainer:
         i = 0
         epoch = 1
 
+        LOG.info("Beginning training session")
         self.__checkpoint(step=i)
 
         while i < iterations:
-            print(f"Epoch {epoch} commencing")
+            LOG.debug("Epoch {epoch} commencing")
             for inputs, labels in self.dataloader_train:
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
 
@@ -108,7 +113,6 @@ class Trainer:
 
             epoch += 1
 
-        print("Done!")
         return self.tb
 
     def test(self, dataloader):
@@ -133,11 +137,11 @@ class Trainer:
                 # metrics
                 loss_sum += loss_batch
                 predictions = torch.argmax(input=logits, dim=1, keepdim=False)
-                try:  # only computes accuracy for classification tasks
+                try:  # only compute accuracy for classification tasks
                     correct_sum += (
                         (predictions == labels).type(torch.float).sum().item()
                     )
-                except:
+                except RuntimeError:
                     correct_sum = 0
 
         loss = loss_sum / len(self.dataloader_test)
@@ -165,17 +169,15 @@ class Trainer:
         # train loss
         with torch.no_grad():
             logits = self.model(inputs)
-            print(f"Logits ({logits.size()}):\n{logits}")
-            print(f"Labels ({labels.size()}):\n{labels}")
             loss_batch = self.criterion(logits, labels)
 
         loss_train = loss_batch / self.dataloader_train.batch_size
 
         # train accuracy
         predictions = torch.argmax(input=logits, dim=1, keepdim=False)
-        try:  # only computes accuracy for classification tasks
+        try:  # only compute accuracy for classification tasks
             correct_sum = (predictions == labels).type(torch.float).sum().item()
-        except:
+        except RuntimeError:
             correct_sum = 0
         acc_train = correct_sum / self.dataloader_train.batch_size
 
@@ -219,20 +221,34 @@ class Trainer:
         try:
             self.tb.add_image(tag="Input", img_tensor=img_grid, global_step=step)
         except TypeError:
-            print("WARNING: Cannnot plot image for inputs")
+            LOG.warning("Cannnot write image for given inputs shape")
 
         img_grid = torchvision.utils.make_grid(logits)
         try:
             self.tb.add_image(tag="Output", img_tensor=img_grid, global_step=step)
         except TypeError:
-            print("WARNING: Cannnot plot image for logits")
+            LOG.warning("Cannnot write image for given logits shape")
 
-        # display
-        print()
-        print(f"Iteration {step} stats:")
-        print(f"Samples seen:\t{step*self.dataloader_train.batch_size}")
-        print(f"Train loss:\t{loss_train:.3f}\tTest loss:\t{loss_test:.3f}")
-        print(f"Train acc:\t{acc_train*100:.2f}%\tTest acc:\t{acc_test*100:.2f}%")
+        LOG.debug(
+            (
+                f"Iteration {step} stats:\n"
+                f"Samples seen:\t{step*self.dataloader_train.batch_size}\n"
+                f"Train loss:\t{loss_train:.3f}\tTest loss:\t{loss_test:.3f}\n"
+                f"Train acc:\t{acc_train*100:.2f}%\tTest acc:\t{acc_test*100:.2f}%"
+            )
+        )
+
+    def save_model(self, name):
+        """Saves the current model to disk. To restore a model, call torch.load().
+
+        Args:
+            name (str): Model filename to save it as.
+        """
+        if not os.path.exists("models"):
+            os.makedirs("models")
+
+        LOG.info("Saving model to disk")
+        torch.save(self.model, f"models/{name}.pt")
 
 
 class Tuner:
@@ -253,10 +269,7 @@ class Tuner:
             n_calls (int): Number of calls to black box function. Must be greater than
                 or equal to 3.
         """
-        assert (
-            n_calls >= 3
-        ), "Tuner failed. Number of calls  must be greater than or equal to 3."
-        print("Tuner: Starting optimization")
+
         opt_res = skopt.gp_minimize(
             func=self.__blackbox,
             dimensions=self.space,
@@ -268,7 +281,7 @@ class Tuner:
             acq_optimizer="sampling",
             x0=None,
             y0=None,
-            random_state=420,
+            random_state=None,
             verbose=True,
             callback=self.__callback,
             n_points=10000,
@@ -280,9 +293,62 @@ class Tuner:
             model_queue_size=None,
         )
 
-        print("Hyperparameter optimization results:")
-        print(f"Location of min:\t{opt_res.x}")
-        print(f"Function value at min:\t{opt_res.fun}")
+        LOG.info(
+            (
+                "Tuning results:\n"
+                f"Location of min:\t{opt_res.x}\n"
+                f"Function value at min:\t{opt_res.fun}"
+            )
+        )
+
+        # region plots
+        time = datetime.now().strftime("%Y%m%d-%H%M%S")
+        plotlib.plot_skopt_evaluations(opt_res, f"logs/tuner/{time}/")
+        plotlib.plot_skopt_objective(opt_res, f"logs/tuner/{time}/")
+        plotlib.plot_skopt_convergence(opt_res, f"logs/tuner/{time}/")
+        plotlib.plot_skopt_regret(opt_res, f"logs/tuner/{time}/")
+        # endregion
+
+        winsound.MessageBeep()
+
+    def explore(self, n_calls):
+        """Conducts random search by uniform sampling within the given bounds for the
+        defined black box function and hyperparamter space.
+
+        Args:
+            n_calls (int): Number of calls to black box function.
+        """
+
+        opt_res = skopt.gp_minimize(
+            func=self.__blackbox,
+            dimensions=self.space,
+            base_estimator=None,
+            n_calls=n_calls,
+            n_initial_points=n_calls,
+            initial_point_generator="random",
+            acq_func="gp_hedge",
+            acq_optimizer="sampling",
+            x0=None,
+            y0=None,
+            random_state=None,
+            verbose=True,
+            callback=self.__callback,
+            n_points=10000,
+            n_restarts_optimizer=None,
+            xi=0.01,
+            kappa=1.96,
+            noise="gaussian",
+            n_jobs=None,
+            model_queue_size=None,
+        )
+
+        LOG.info(
+            (
+                "Exploration results:\n"
+                f"Location of min:\t{opt_res.x}\n"
+                f"Function value at min:\t{opt_res.fun}"
+            )
+        )
 
         # region plots
         time = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -320,26 +386,22 @@ class Tuner:
 
         loss, acc = trainer.test(dataloader=dataloader_test)
 
-        tb.add_hparams(
-            hparam_dict={
-                "lr": float(params[0]),
-                "bs": int(params[1]),
-                "radius": int(params[2]),
-            },
-            metric_dict={"Metric/loss": float(loss), "Metric/acc": float(acc)},
-        )
+        self._record_hparams(tb, params, loss, acc)
         tb.close()
 
         return float(loss)
 
     @staticmethod
     def __callback(opt_res):
-        print(f"Hyperparameters that were just tested: {opt_res.x_iters[-1]}\n")
+        LOG.debug(f"Hyperparameters that were just tested: {opt_res.x_iters[-1]}")
 
     def _get_dataloaders(self, params):
         raise NotImplementedError("Method must be implemented in derived classes.")
 
     def _build_model(self, params):
+        raise NotImplementedError("Method must be implemented in derived classes.")
+
+    def _record_hparams(self, tb, params, loss, acc):
         raise NotImplementedError("Method must be implemented in derived classes.")
 
 
@@ -352,7 +414,7 @@ class Tuner_Autoencoder(Tuner):
         self.space = [
             skopt.space.space.Real(
                 low=0.0001,
-                high=0.9,
+                high=1.0,
                 name="lr",
             ),
             skopt.space.space.Categorical(
@@ -363,6 +425,9 @@ class Tuner_Autoencoder(Tuner):
             skopt.space.space.Categorical(
                 categories=[1, 4, 8], transform="identity", name="radius"
             ),
+            # skopt.space.space.Categorical(
+            #     categories=[1, 4, 8], transform="identity", name="embed_size"
+            # ),
         ]
 
     def _get_dataloaders(self, params):
@@ -405,8 +470,6 @@ class Tuner_Autoencoder(Tuner):
         return dataloader_train, dataloader_test, dataloader_valid
 
     def _build_model(self, params):
-        print("Building new Autoencoder model...")
-
         model = models.AutoEncoder(
             input_size=13, embed_size=4, radius=int(params[2])
         ).to(self.device)
@@ -415,6 +478,25 @@ class Tuner_Autoencoder(Tuner):
         criterion = torch.nn.MSELoss(reduction="sum")
 
         return model, optimizer, criterion
+
+    def _record_hparams(self, tb, params, loss, acc):
+        """Records the current hyperparameters along with metrics to the Tensorboard
+            writer.
+
+        Args:
+            tb (SummaryWriter): The tensorboard writer provided by the Trainer.
+            params (list): list of evaluated hyperparameters.
+            loss (torch.Tensor): Final test loss output from Trainer.
+            acc (torch.Tensor): Final accuracy output from Trainer.
+        """
+        tb.add_hparams(
+            hparam_dict={
+                "lr": float(params[0]),
+                "bs": int(params[1]),
+                "radius": int(params[2]),
+            },
+            metric_dict={"Metric/loss": float(loss), "Metric/acc": float(acc)},
+        )
 
 
 class SummaryWriter(tensorboard.SummaryWriter):
@@ -448,10 +530,8 @@ def get_device():
         torch.device: The device.
     """
     if torch.cuda.is_available():
-        print("Using GPU")
         device = torch.device("cuda:0")
     else:
-        print("Using CPU")
         device = torch.device("cpu")
 
     return device

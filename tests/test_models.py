@@ -1,5 +1,8 @@
 """Tests for model architectures."""
 
+# stdlib
+import logging
+
 # external
 import pytest
 import torch
@@ -7,6 +10,8 @@ import torchinfo
 
 # project
 from core import models
+
+LOG = logging.getLogger(__name__)
 
 
 @pytest.mark.skip(reason="WIP")
@@ -19,22 +24,24 @@ def test_autoencoder():
     model = models.AutoEncoder(input_size=32, embed_size=8, radius=4)
 
     data = torch.randn(32)
-    print(f"Input ({data.size()}):\n", data)
+    LOG.info(f"Input ({data.size()}):\n{data}")
 
-    torchinfo.summary(
+    summary = torchinfo.summary(
         model=model,
         input_data=data,
         col_names=("input_size", "output_size", "num_params"),
+        verbose=0,
     )
+    LOG.info(f"Model:\n{summary}")
 
     output = model(data)
-    print(f"Output ({output.size()}):\n", output)
+    LOG.info(f"Output ({output.size()}):\n{output}")
 
     code = model.encoder(data)
-    print(f"Encoding ({code.size()}):\n", code)
+    LOG.info(f"Encoding ({code.size()}):\n{code}")
 
     decode = model.decoder(code)
-    print(f"Decoding ({decode.size()}):\n", decode)
+    LOG.info(f"Decoding ({decode.size()}):\n{decode}")
 
     assert (output == decode).all()
 
@@ -44,13 +51,14 @@ def test_rnn():
     model = models.RNN(input_size=16, hidden_size=8, num_rnn_layers=2, output_size=1)
 
     data = torch.randn(4, 8, 16)  # (batch size, sequence length, features)
-    print(f"Input ({data.size()}):\n", data)
+    LOG.info(f"Input ({data.size()}):\n{data}")
 
     torchinfo.summary(
         model=model,
         input_data=data,
         col_names=("input_size", "output_size", "num_params"),
+        verbose=0,
     )
 
     output = model(data)
-    print(f"Output ({output.size()}):\n", output)
+    LOG.info(f"Output ({output.size()}):\n{output}")

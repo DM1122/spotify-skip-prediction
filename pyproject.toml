@@ -34,6 +34,14 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 addopts = "--html=logs/pytest-report.html --self-contained-html" 
 testpaths = ["tests"]
+log_cli = false
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+log_level = "DEBUG"
+log_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_date_format = "%Y-%m-%d %H:%M:%S"
+log_auto_indent = true
 markers = [
     "slow: tests that are slow to run (deselect with '-m \"not slow\"').",
     "plot: tests that produce plots."
@@ -51,7 +59,7 @@ line-length = 88
 
 [tool.pylint.messages_control]
 max-line-length = 88
-disable = ["invalid-name","too-many-arguments", "too-many-locals", "arguments-differ", "unnecessary-lambda", "too-many-instance-attributes", "bare-except", "protected-access", "duplicate-code", "too-few-public-methods"]
+disable = ["invalid-name","too-many-arguments", "too-many-locals", "arguments-differ", "unnecessary-lambda", "too-many-instance-attributes", "protected-access", "duplicate-code", "too-few-public-methods", "logging-fstring-interpolation"]
 generated-members=["numpy.*","torch.*"] # https://github.com/pytorch/pytorch/issues/701
 
 

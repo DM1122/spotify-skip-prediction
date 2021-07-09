@@ -11,12 +11,13 @@ import sklearn
 import skopt
 import torch
 import torchvision
+from pmdarima import datasets as pmd
 from sklearn import datasets as skd
 from torch.utils import tensorboard
 
 # project
 from core import models
-from libs import plotlib
+from libs import datalib, plotlib
 
 LOG = logging.getLogger(__name__)
 
@@ -405,7 +406,7 @@ class Tuner:
         raise NotImplementedError("Method must be implemented in derived classes.")
 
 
-class Tuner_Autoencoder(Tuner):
+class Tuner_Autoencoder_Test(Tuner):
     """A tuner for the autoencoder model."""
 
     def __init__(self):
@@ -494,6 +495,206 @@ class Tuner_Autoencoder(Tuner):
                 "lr": float(params[0]),
                 "bs": int(params[1]),
                 "radius": int(params[2]),
+            },
+            metric_dict={"Metric/loss": float(loss), "Metric/acc": float(acc)},
+        )
+
+
+class Tuner_RNN_Test(Tuner):
+    """A tuner for the RNN model."""
+
+    def __init__(self):
+        super().__init__()
+
+        self.space = [
+            skopt.space.space.Real(
+                low=0.0001,
+                high=1.0,
+                name="lr",
+            ),
+            skopt.space.space.Categorical(
+                categories=[1, 4, 8, 16, 32, 64, 128, 256],
+                transform="identity",
+                name="bs",
+            ),
+            skopt.space.space.Categorical(
+                categories=[1, 4, 8, 16, 32], transform="identity", name="hs"
+            ),
+            skopt.space.space.Categorical(
+                categories=[1, 4, 8], transform="identity", name="layers"
+            ),
+        ]
+
+    def _get_dataloaders(self, params):
+        # region data preprocessing
+
+        # import
+        LOG.info("Importing data")
+        data = pmd.stocks.load_msft()
+        LOG.info(f"Data:\n{data}")
+
+        # filter
+        LOG.info("Filtering data")
+        data = data[["Open", "High", "Low", "Close", "Volume"]]
+
+        # create labels
+        LOG.info("Creating labels")
+        data["Close_Future"] = data["Close"].shift(-1)
+        data = data[:-1]
+        LOG.debug(f"Data preprocessed:\n{data}")
+
+        # split
+        LOG.info("Splitting data")
+        data_train = data[0:6000]
+        LOG.debug(f"Data train:\n{data_train}")
+        data_test = data[6000:7000]
+        LOG.debug(f"Data test:\n{data_test}")
+        data_valid = data[7000:7983]
+        LOG.debug(f"Data valid:\n{data_valid}")
+
+        # features and labels
+        LOG.info("Extracting features and labels")
+        features_train = data_train.drop("Close_Future", axis=1)
+        LOG.debug(f"Features train:\n{features_train}")
+        labels_train = data_train.loc[:, ["Close_Future"]]
+        LOG.debug(f"Labels train:\n{labels_train}")
+
+        features_test = data_test.drop("Close_Future", axis=1)
+        labels_test = data_test.loc[:, ["Close_Future"]]
+
+        features_valid = data_valid.drop("Close_Future", axis=1)
+        labels_valid = data_valid.loc[:, ["Close_Future"]]
+
+        # scaling
+        LOG.info("Scaling data")
+        scaler_features = sklearn.preprocessing.StandardScaler(
+            with_mean=False, with_std=True
+        )
+        scaler_labels = sklearn.preprocessing.StandardScaler(
+            with_mean=False, with_std=True
+        )
+
+        scaler_features.fit(features_train)
+        LOG.debug(
+            f"Feature scaler stats:\n"
+            f"Scale:\t{scaler_features.scale_}\nMean:\t{scaler_features.mean_}\n"
+            f"Var:\t{scaler_features.var_}\n"
+            f"Samples:\t{scaler_features.n_samples_seen_}\n"
+        )
+        scaler_labels.fit(labels_train)
+        LOG.debug(
+            f"Label scaler stats:\n"
+            f"Scale:\t{scaler_labels.scale_}\nMean:\t{scaler_labels.mean_}\n"
+            f"Var:\t{scaler_labels.var_}\nSamples:\t{scaler_labels.n_samples_seen_}\n"
+        )
+
+        features_train = scaler_features.transform(features_train)
+        LOG.debug(f"Features train scaled {features_train.shape}:\n{features_train}")
+        labels_train = scaler_labels.transform(labels_train)
+        LOG.debug(f"Labels train scaled {labels_train.shape}:\n{labels_train}")
+
+        features_test = scaler_features.transform(features_test)
+        labels_test = scaler_labels.transform(labels_test)
+
+        features_valid = scaler_features.transform(features_valid)
+        labels_valid = scaler_labels.transform(labels_valid)
+
+        # reshaping
+        LOG.info("Reshaping features and labels")
+        features_train = datalib.split_sequences(sequences=features_train, n_steps=7)
+        LOG.debug(f"Features train reshaped {features_train.shape}:\n{features_train}")
+        labels_train = datalib.split_sequences(sequences=labels_train, n_steps=7)
+        LOG.debug(f"Labels train reshaped {labels_train.shape}:\n{labels_train}")
+
+        features_test = datalib.split_sequences(sequences=features_test, n_steps=7)
+        labels_test = datalib.split_sequences(sequences=labels_test, n_steps=7)
+
+        features_valid = datalib.split_sequences(sequences=features_valid, n_steps=7)
+        labels_valid = datalib.split_sequences(sequences=labels_valid, n_steps=7)
+        # endregion
+
+        # region datasets
+        LOG.info("Creating datasets")
+        features_train = torch.tensor(features_train, dtype=torch.float)
+        labels_train = torch.tensor(labels_train, dtype=torch.float)
+
+        features_test = torch.tensor(features_test, dtype=torch.float)
+        labels_test = torch.tensor(labels_test, dtype=torch.float)
+
+        features_valid = torch.tensor(features_valid, dtype=torch.float)
+        labels_valid = torch.tensor(labels_valid, dtype=torch.float)
+
+        dataset_train = torch.utils.data.TensorDataset(
+            features_train,
+            labels_train,
+        )
+        LOG.debug(f"Dataset train:\n{dataset_train}")
+
+        dataset_test = torch.utils.data.TensorDataset(
+            features_test,
+            labels_test,
+        )
+
+        dataset_valid = torch.utils.data.TensorDataset(
+            features_valid,
+            labels_valid,
+        )
+        # endregion
+
+        # region dataloaders
+        LOG.info("Creating dataloaders")
+        dataloader_train = torch.utils.data.DataLoader(
+            dataset=dataset_train,
+            batch_size=int(params[1]),
+            shuffle=True,
+            pin_memory=True,
+        )
+        LOG.debug(f"Dataloader train:\n{dataloader_train}")
+        dataloader_test = torch.utils.data.DataLoader(
+            dataset=dataset_test,
+            batch_size=1,
+            shuffle=True,
+            pin_memory=True,
+        )
+        dataloader_valid = torch.utils.data.DataLoader(
+            dataset=dataset_valid,
+            batch_size=1,
+            shuffle=True,
+            pin_memory=True,
+        )
+        # endregion
+
+        return dataloader_train, dataloader_test, dataloader_valid
+
+    def _build_model(self, params):
+        model = models.RNN(
+            input_size=5,
+            hidden_size=int(params[2]),
+            num_rnn_layers=int(params[3]),
+            output_size=1,
+        ).to(self.device)
+
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=float(params[0]))
+        criterion = torch.nn.MSELoss(reduction="sum")
+
+        return model, optimizer, criterion
+
+    def _record_hparams(self, tb, params, loss, acc):
+        """Records the current hyperparameters along with metrics to the Tensorboard
+            writer.
+
+        Args:
+            tb (SummaryWriter): The tensorboard writer provided by the Trainer.
+            params (list): list of evaluated hyperparameters.
+            loss (torch.Tensor): Final test loss output from Trainer.
+            acc (torch.Tensor): Final accuracy output from Trainer.
+        """
+        tb.add_hparams(
+            hparam_dict={
+                "lr": float(params[0]),
+                "bs": int(params[1]),
+                "hs": int(params[2]),
+                "layers": int(params[3]),
             },
             metric_dict={"Metric/loss": float(loss), "Metric/acc": float(acc)},
         )

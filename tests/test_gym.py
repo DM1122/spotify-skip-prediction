@@ -5,6 +5,8 @@ import logging
 import math
 
 # external
+import numpy as np
+import pandas as pd
 import pytest
 import sklearn
 import torch
@@ -14,7 +16,7 @@ from sklearn import datasets as skd
 
 # project
 from core import gym, models
-from libs import datalib
+from libs import datalib, plotlib
 
 LOG = logging.getLogger(__name__)
 
@@ -108,48 +110,133 @@ def test_trainer_unsupervised():
     )
 
 
+@pytest.mark.plot
 def test_trainer_timeseries_regression():
     """Test trainer at time-series forecasting task using MSFT stock dataset and
     rnn model."""
     device = gym.get_device()
     LOG.info(f"Using {device}")
+    # region data preprocessing
 
-    # region dataloading
-    # datasets
+    # import
+    LOG.info("Importing data")
     data = pmd.stocks.load_msft()
-    LOG.info(f"Dataset:\n{data}")
-    features = data[["Open", "High", "Low", "Close"]].values
-    labels = data["Close"].shift(-1).values  # predict close one day in advance
+    LOG.info(f"Data:\n{data}")
 
-    LOG.info(f"Features:\n{features}")
-    LOG.info(f"Labels:\n{labels}")
+    # filter
+    LOG.info("Filtering data")
+    data = data[["Open", "High", "Low", "Close", "Volume"]]
 
-    # reshape to samples of sequence length 7 (one week)
-    features_reshaped = datalib.split_sequences(sequences=features, n_steps=7)
-    labels_reshaped = datalib.split_sequences(sequences=labels, n_steps=7)
+    # create labels
+    LOG.info("Creating labels")
+    data["Close_Future"] = data["Close"].shift(-1)
+    data = data[:-1]
+    LOG.debug(f"Data preprocessed:\n{data}")
 
-    dataset_train = torch.utils.data.TensorDataset(
-        torch.tensor(features_reshaped[0:4000], dtype=torch.float),
-        torch.tensor(labels_reshaped[0:4000], dtype=torch.float).unsqueeze(-1),
+    # split
+    LOG.info("Splitting data")
+    data_train = data[0:6000]
+    LOG.debug(f"Data train:\n{data_train}")
+    data_test = data[6000:7000]
+    LOG.debug(f"Data test:\n{data_test}")
+    data_valid = data[7000:7983]
+    LOG.debug(f"Data valid:\n{data_valid}")
+
+    # features and labels
+    LOG.info("Extracting features and labels")
+    features_train = data_train.drop("Close_Future", axis=1)
+    LOG.debug(f"Features train:\n{features_train}")
+    labels_train = data_train.loc[:, ["Close_Future"]]
+    LOG.debug(f"Labels train:\n{labels_train}")
+
+    features_test = data_test.drop("Close_Future", axis=1)
+    labels_test = data_test.loc[:, ["Close_Future"]]
+
+    features_valid = data_valid.drop("Close_Future", axis=1)
+    labels_valid = data_valid.loc[:, ["Close_Future"]]
+
+    # scaling
+    LOG.info("Scaling data")
+    scaler_features = sklearn.preprocessing.StandardScaler(
+        with_mean=False, with_std=True
+    )
+    scaler_labels = sklearn.preprocessing.StandardScaler(with_mean=False, with_std=True)
+
+    scaler_features.fit(features_train)
+    LOG.debug(
+        f"Feature scaler stats:\n"
+        f"Scale:\t{scaler_features.scale_}\nMean:\t{scaler_features.mean_}\n"
+        f"Var:\t{scaler_features.var_}\nSamples:\t{scaler_features.n_samples_seen_}\n"
+    )
+    scaler_labels.fit(labels_train)
+    LOG.debug(
+        f"Label scaler stats:\n"
+        f"Scale:\t{scaler_labels.scale_}\nMean:\t{scaler_labels.mean_}\n"
+        f"Var:\t{scaler_labels.var_}\nSamples:\t{scaler_labels.n_samples_seen_}\n"
     )
 
+    features_train = scaler_features.transform(features_train)
+    LOG.debug(f"Features train scaled {features_train.shape}:\n{features_train}")
+    labels_train = scaler_labels.transform(labels_train)
+    LOG.debug(f"Labels train scaled {labels_train.shape}:\n{labels_train}")
+
+    features_test = scaler_features.transform(features_test)
+    labels_test = scaler_labels.transform(labels_test)
+
+    features_valid = scaler_features.transform(features_valid)
+    labels_valid = scaler_labels.transform(labels_valid)
+
+    # reshaping
+    LOG.info("Reshaping features and labels")
+    features_train = datalib.split_sequences(sequences=features_train, n_steps=7)
+    LOG.debug(f"Features train reshaped {features_train.shape}:\n{features_train}")
+    labels_train = datalib.split_sequences(sequences=labels_train, n_steps=7)
+    LOG.debug(f"Labels train reshaped {labels_train.shape}:\n{labels_train}")
+
+    features_test = datalib.split_sequences(sequences=features_test, n_steps=7)
+    labels_test = datalib.split_sequences(sequences=labels_test, n_steps=7)
+
+    features_valid = datalib.split_sequences(sequences=features_valid, n_steps=7)
+    labels_valid = datalib.split_sequences(sequences=labels_valid, n_steps=7)
+    # endregion
+
+    # region datasets
+    LOG.info("Creating datasets")
+    features_train = torch.tensor(features_train, dtype=torch.float)
+    labels_train = torch.tensor(labels_train, dtype=torch.float)
+
+    features_test = torch.tensor(features_test, dtype=torch.float)
+    labels_test = torch.tensor(labels_test, dtype=torch.float)
+
+    features_valid = torch.tensor(features_valid, dtype=torch.float)
+    labels_valid = torch.tensor(labels_valid, dtype=torch.float)
+
+    dataset_train = torch.utils.data.TensorDataset(
+        features_train,
+        labels_train,
+    )
+    LOG.debug(f"Dataset train:\n{dataset_train}")
+
     dataset_test = torch.utils.data.TensorDataset(
-        torch.tensor(features_reshaped[4000:6000], dtype=torch.float),
-        torch.tensor(labels_reshaped[4000:6000], dtype=torch.float).unsqueeze(-1),
+        features_test,
+        labels_test,
     )
 
     dataset_valid = torch.utils.data.TensorDataset(
-        torch.tensor(features_reshaped[6000:7977], dtype=torch.float),
-        torch.tensor(labels_reshaped[6000:7977], dtype=torch.float).unsqueeze(-1),
+        features_valid,
+        labels_valid,
     )
+    # endregion
 
-    # dataloaders
+    # region dataloaders
+    LOG.info("Creating dataloaders")
     dataloader_train = torch.utils.data.DataLoader(
         dataset=dataset_train,
-        batch_size=8,
+        batch_size=32,
         shuffle=True,
         pin_memory=True,
     )
+    LOG.debug(f"Dataloader train:\n{dataloader_train}")
     dataloader_test = torch.utils.data.DataLoader(
         dataset=dataset_test,
         batch_size=1,
@@ -165,9 +252,10 @@ def test_trainer_timeseries_regression():
     # endregion
 
     # region model definiton
-    model = models.RNN(input_size=4, hidden_size=8, num_rnn_layers=2, output_size=1).to(
-        device
-    )
+    LOG.info("Instantiating model")
+    model = models.RNN(
+        input_size=5, hidden_size=16, num_rnn_layers=4, output_size=1
+    ).to(device)
     summary = torchinfo.summary(
         model=model,
         input_data=next(iter(dataloader_train))[0],
@@ -176,10 +264,11 @@ def test_trainer_timeseries_regression():
     )
     LOG.info(f"Model:\n{summary}")
 
-    optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(params=model.parameters(), lr=0.03)
     criterion = torch.nn.MSELoss(reduction="sum")
     # endregion
 
+    # region training
     trainer = gym.Trainer(
         model=model,
         dataloader_train=dataloader_train,
@@ -196,6 +285,60 @@ def test_trainer_timeseries_regression():
     LOG.info(
         f"Validation loss:\t{loss_valid:.3f}\tValidation acc:\t{acc_valid*100:.2f}%"
     )
+    # endregion
+
+    # region inference
+    LOG.info("Running inference")
+    with torch.no_grad():
+        logits_train = model(features_train)
+        logits_test = model(features_test)
+        logits_valid = model(features_valid)
+
+    labels_train = scaler_labels.inverse_transform(labels_train)
+    logits_train = scaler_labels.inverse_transform(logits_train)
+
+    labels_test = scaler_labels.inverse_transform(labels_test)
+    logits_test = scaler_labels.inverse_transform(logits_test)
+
+    labels_valid = scaler_labels.inverse_transform(labels_valid)
+    logits_valid = scaler_labels.inverse_transform(logits_valid)
+
+    stack_train = np.stack((labels_train.flatten(), logits_train.flatten()), axis=1)
+    df_train = pd.DataFrame(
+        data=stack_train, index=None, columns=["Labels_Train", "Logits_Train"]
+    )
+
+    stack_test = np.stack((labels_test.flatten(), logits_test.flatten()), axis=1)
+    df_test = pd.DataFrame(
+        data=stack_test, index=None, columns=["Labels_Test", "Logits_Test"]
+    )
+
+    stack_valid = np.stack((labels_valid.flatten(), logits_valid.flatten()), axis=1)
+    df_valid = pd.DataFrame(
+        data=stack_valid, index=None, columns=["Labels_Valid", "Logits_Valid"]
+    )
+
+    plotlib.plot_series(
+        df=df_train,
+        title="Training Logits vs Labels",
+        traces=["Labels_Train", "Logits_Train"],
+        dark_mode=True,
+    )
+
+    plotlib.plot_series(
+        df=df_test,
+        title="Testing Logits vs Labels",
+        traces=["Labels_Test", "Logits_Test"],
+        dark_mode=True,
+    )
+
+    plotlib.plot_series(
+        df=df_valid,
+        title="Validation Logits vs Labels",
+        traces=["Labels_Valid", "Logits_Valid"],
+        dark_mode=True,
+    )
+    # endregion
 
 
 def test_trainer_classification():
@@ -299,6 +442,7 @@ def test_trainer_classification():
     )
 
 
+@pytest.mark.skip(reason="WIP")
 def test_trainer_timeseries_classification():
     """Test trainer at timeseries classification task using x dataset and RNN model."""
     device = gym.get_device()
@@ -310,7 +454,7 @@ def test_tuner_unsupervised_explore():
     """Test tuner exploration at unsupervised task using wine dataset and autoencoder
     model."""
 
-    tuner = gym.Tuner_Autoencoder()
+    tuner = gym.Tuner_Autoencoder_Test()
     tuner.explore(n_calls=3)
 
 
@@ -319,5 +463,14 @@ def test_tuner_unsupervised_tune():
     """Test tuner tuning at unsupervised task using wine dataset and autoencoder
     model."""
 
-    tuner = gym.Tuner_Autoencoder()
+    tuner = gym.Tuner_Autoencoder_Test()
     tuner.tune(n_calls=3)
+
+
+@pytest.mark.slow
+def test_tuner_explore_timeseries_regression():
+    """Test tuner exploration at timeseries regression task using MSFT stock dataset and
+    rnn model."""
+
+    tuner = gym.Tuner_RNN_Test()
+    tuner.explore(n_calls=3)

@@ -48,17 +48,59 @@ def test_autoencoder():
 
 def test_rnn():
     """Test RNN model functionality."""
-    model = models.RNN(input_size=16, hidden_size=8, num_rnn_layers=2, output_size=1)
-
     data = torch.randn(4, 8, 16)  # (batch size, sequence length, features)
     LOG.info(f"Input ({data.size()}):\n{data}")
 
-    torchinfo.summary(
+    LOG.info("Instantiating model")
+    model = models.RNN(input_size=16, hidden_size=8, num_rnn_layers=2, output_size=1)
+
+    summary = torchinfo.summary(
         model=model,
         input_data=data,
         col_names=("input_size", "output_size", "num_params"),
         verbose=0,
     )
+    LOG.info(f"Model:\n{summary}")
+
+    output = model(data)
+    LOG.info(f"Output ({output.size()}):\n{output}")
+
+
+def test_lstm():
+    """Test LSTM model functionality."""
+    data = torch.randn(4, 8, 16)  # (batch size, sequence length, features)
+    LOG.info(f"Input ({data.size()}):\n{data}")
+
+    LOG.info("Instantiating model")
+    model = models.LSTM(input_size=16, hidden_size=8, num_rnn_layers=2, output_size=1)
+
+    summary = torchinfo.summary(
+        model=model,
+        input_data=data,
+        col_names=("input_size", "output_size", "num_params"),
+        verbose=0,
+    )
+    LOG.info(f"Model:\n{summary}")
+
+    output = model(data)
+    LOG.info(f"Output ({output.size()}):\n{output}")
+
+
+def test_gru():
+    """Test GRU model functionality."""
+    data = torch.randn(4, 8, 16)  # (batch size, sequence length, features)
+    LOG.info(f"Input ({data.size()}):\n{data}")
+
+    LOG.info("Instantiating model")
+    model = models.GRU(input_size=16, hidden_size=8, num_rnn_layers=2, output_size=1)
+
+    summary = torchinfo.summary(
+        model=model,
+        input_data=data,
+        col_names=("input_size", "output_size", "num_params"),
+        verbose=0,
+    )
+    LOG.info(f"Model:\n{summary}")
 
     output = model(data)
     LOG.info(f"Output ({output.size()}):\n{output}")

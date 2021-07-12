@@ -2,7 +2,6 @@
 tmp
 __pycache__
 logs
-test_data
 .vscode
 .pytest_cache
 .DS_Store

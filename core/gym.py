@@ -36,7 +36,7 @@ class Trainer:
         logname (str): Name of directory in which to log tensorboard runs.
 
     Attributes:
-        tb (SummaryWriter): Used to log info to Tensorboard.
+        writer (SummaryWriter): Used to log info to Tensorboard.
     """
 
     def __init__(
@@ -65,10 +65,10 @@ class Trainer:
             )
         else:
             logdir = "logs/tensorboard/" + datetime.now().strftime("%Y%m%d-%H%M%S")
-        self.tb = SummaryWriter(logdir)
+        self.writer = SummaryWriter(logdir)
 
         # log model graph
-        self.tb.add_graph(
+        self.writer.add_graph(
             model=self.model, input_to_model=next(iter(self.dataloader_train))[0]
         )
 
@@ -114,7 +114,7 @@ class Trainer:
 
             epoch += 1
 
-        return self.tb
+        return self.writer
 
     def test(self, dataloader):
         """Computes test loss and accuracy metrics using a given dataloader
@@ -186,25 +186,25 @@ class Trainer:
         loss_test, acc_test = self.test(dataloader=self.dataloader_test)
 
         # log metrics
-        self.tb.add_scalar(
+        self.writer.add_scalar(
             tag="Loss/Train",
             scalar_value=loss_train,
             global_step=step,
             new_style=False,
         )
-        self.tb.add_scalar(
+        self.writer.add_scalar(
             tag="Loss/Test",
             scalar_value=loss_test,
             global_step=step,
             new_style=False,
         )
-        self.tb.add_scalar(
+        self.writer.add_scalar(
             tag="Accuracy/Train",
             scalar_value=acc_train,
             global_step=step,
             new_style=False,
         )
-        self.tb.add_scalar(
+        self.writer.add_scalar(
             tag="Accuracy/Test",
             scalar_value=acc_test,
             global_step=step,
@@ -213,20 +213,20 @@ class Trainer:
 
         # log params
         for layer_name, param in self.model.named_parameters():
-            self.tb.add_histogram(
+            self.writer.add_histogram(
                 tag=self.logname + "." + layer_name, values=param, global_step=step
             )
 
         # log samples
         img_grid = torchvision.utils.make_grid(inputs)
         try:
-            self.tb.add_image(tag="Input", img_tensor=img_grid, global_step=step)
+            self.writer.add_image(tag="Input", img_tensor=img_grid, global_step=step)
         except TypeError:
             LOG.warning("Cannnot write image for given inputs shape")
 
         img_grid = torchvision.utils.make_grid(logits)
         try:
-            self.tb.add_image(tag="Output", img_tensor=img_grid, global_step=step)
+            self.writer.add_image(tag="Output", img_tensor=img_grid, global_step=step)
         except TypeError:
             LOG.warning("Cannnot write image for given logits shape")
 
@@ -383,12 +383,12 @@ class Tuner:
             device=self.device,
             logname="test_tuner_unsupervised",
         )
-        tb = trainer.train(iterations=100)
+        writer = trainer.train(iterations=100)
 
         loss, acc = trainer.test(dataloader=dataloader_test)
 
-        self._record_hparams(tb, params, loss, acc)
-        tb.close()
+        self._record_hparams(writer, params, loss, acc)
+        writer.close()
 
         return float(loss)
 
@@ -402,7 +402,7 @@ class Tuner:
     def _build_model(self, params):
         raise NotImplementedError("Method must be implemented in derived classes.")
 
-    def _record_hparams(self, tb, params, loss, acc):
+    def _record_hparams(self, writer, params, loss, acc):
         raise NotImplementedError("Method must be implemented in derived classes.")
 
 
@@ -480,17 +480,17 @@ class Tuner_Autoencoder_Test(Tuner):
 
         return model, optimizer, criterion
 
-    def _record_hparams(self, tb, params, loss, acc):
+    def _record_hparams(self, writer, params, loss, acc):
         """Records the current hyperparameters along with metrics to the Tensorboard
             writer.
 
         Args:
-            tb (SummaryWriter): The tensorboard writer provided by the Trainer.
+            writer (SummaryWriter): The tensorboard writer provided by the Trainer.
             params (list): list of evaluated hyperparameters.
             loss (torch.Tensor): Final test loss output from Trainer.
             acc (torch.Tensor): Final accuracy output from Trainer.
         """
-        tb.add_hparams(
+        writer.add_hparams(
             hparam_dict={
                 "lr": float(params[0]),
                 "bs": int(params[1]),
@@ -679,17 +679,17 @@ class Tuner_RNN_Test(Tuner):
 
         return model, optimizer, criterion
 
-    def _record_hparams(self, tb, params, loss, acc):
+    def _record_hparams(self, writer, params, loss, acc):
         """Records the current hyperparameters along with metrics to the Tensorboard
             writer.
 
         Args:
-            tb (SummaryWriter): The tensorboard writer provided by the Trainer.
+            writer (SummaryWriter): The tensorboard writer provided by the Trainer.
             params (list): list of evaluated hyperparameters.
             loss (torch.Tensor): Final test loss output from Trainer.
             acc (torch.Tensor): Final accuracy output from Trainer.
         """
-        tb.add_hparams(
+        writer.add_hparams(
             hparam_dict={
                 "lr": float(params[0]),
                 "bs": int(params[1]),

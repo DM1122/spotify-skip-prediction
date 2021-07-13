@@ -1,17 +1,17 @@
 repos:
 - repo: https://github.com/pre-commit/mirrors-isort
-  rev: v5.8.0
+  rev: v5.9.2
   hooks:
   - id: isort
 
 - repo: https://github.com/psf/black
-  rev: 21.5b1
+  rev: 21.6b0
   hooks:
   - id: black
     language_version: python3.7
 
 - repo: https://github.com/pycqa/pylint
-  rev: v2.8.3
+  rev: v2.9.3
   hooks:
   - id: pylint
     additional_dependencies: ["plotly","torch","torchinfo","pandas","torchvision","pytest","scikit-learn", "scikit-optimize", "matplotlib","pmdarima"] # https://stackoverflow.com/questions/61238318/pylint-and-pre-commit-hook-unable-to-import

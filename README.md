@@ -26,12 +26,12 @@ This section will take you through the procedure to configure your development e
 
 Begin by installing the project's python version.
 
-The repo employs [poetry](https://python-poetry.org/) as its dependency and environment manager. Poetry can be installed through the Windows Powershell via:
+The repo employs [poetry](https://python-poetry.org/) <img src="img/poetry-logo.png" height="16"/> as its dependency and environment manager. Poetry can be installed through the Windows Powershell via:
 ```
 (Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python -
 ```
 
-Clone the repo using [Github Desktop](https://desktop.github.com/) or the commandline via:
+Clone the repo using [Github Desktop](https://desktop.github.com/) <img src="img/github-desktop-logo.png" height="16"/> or the commandline via:
 
 ```
 git clone https://github.com/DM1122/spotify-skip-prediction.git
@@ -42,7 +42,7 @@ From within the cloned repo, run poetry's install command to install all the dep
 poetry install
 ```
 
-Configure your IDE to use the virtual environment poetry has created at `C:\Users\<USERNAME>\AppData\Local\pypoetry\Cache\virtualenvs`. In the case of [VSCode](https://code.visualstudio.com/), go to `File>Preferences>Settings` and search for `Venv Path`. Add poetry's virtual environment path to the entry field. Once you have done so, enter the command pallet by going to `View>Command Palette` and search for `Python:Select Interpreter`. Select poetry's virtual environment for the repo.
+Configure your IDE to use the virtual environment poetry has created at `C:\Users\<USERNAME>\AppData\Local\pypoetry\Cache\virtualenvs`. In the case of [VSCode](https://code.visualstudio.com/) <img src="img/vscode-logo.png" height="16"/>, go to `File>Preferences>Settings` and search for `Venv Path`. Add poetry's virtual environment path to the entry field. Once you have done so, enter the command pallet by going to `View>Command Palette` and search for `Python:Select Interpreter`. Select poetry's virtual environment for the repo.
 
 Install the pre-commit script and hooks using:
 ```
@@ -80,12 +80,12 @@ def my_test_function():
 
 To use the custom marker `foo`, it must be added to the list of custom pytest markers in `pyproject.toml>[tool.pytest.ini_options]>markers`. The tests marked with `foo` can then be run by calling:
 ```
-pytest -m foo
+pytest -v -m foo
 ```
 
 Or to avoid all tests with a particular marker, call:
 ```
-pytest -m "not foo"
+pytest -v -m "not foo"
 ```
 
 
@@ -102,7 +102,6 @@ Pre-commit will run the hooks on commit, but when a hook fails, they can be run 
 ```
 isort . & black . & pylint_runner
 ```
-
 
 
 

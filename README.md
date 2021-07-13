@@ -45,7 +45,7 @@ From within the cloned repo, run poetry's install command to install all the dep
 poetry install
 ```
 
-Configure your IDE to use the virtual environment poetry has created at `C:\Users\<USERNAME>\AppData\Local\pypoetry\Cache\virtualenvs`. In the case of [VSCode](https://code.visualstudio.com/) <img src="img/vscode-logo.png" height="16"/>, go to `File>Preferences>Settings` and search for `Venv Path`. Add poetry's virtual environment path to the entry field. Once you have done so, enter the command pallet by going to `View>Command Palette` and search for `Python:Select Interpreter`. Select poetry's virtual environment for the repo.
+Configure your IDE to use the virtual environment poetry has created at `C:\Users\<USERNAME>\AppData\Local\pypoetry\Cache\virtualenvs`. In the case of [VSCode](https://code.visualstudio.com/) <img src="img/vscode-logo.png" height="16"/>, enter the command pallet by going to `View>Command Palette` and search for `Python:Select Interpreter`. Select the appropriate poetry virtual environment for the repo.
 
 Install the pre-commit script and hooks using:
 ```

@@ -18,13 +18,16 @@ TODO: Add project description
 ## Setup
 This section will take you through the procedure to configure your development environment. At a glance:
 1. Install project's python version
+1. Install Git
 1. Install poetry
 1. Clone repository
 1. Run poetry install
 1. Configure IDE virtual environment
 1. Install pre-commit hooks
 
-Begin by installing the project's python version.
+Begin by installing the project's python version. See the badges at the top of the README for the version number.
+
+If not already installed, install [git](https://git-scm.com/).
 
 The repo employs [poetry](https://python-poetry.org/) <img src="img/poetry-logo.png" height="16"/> as its dependency and environment manager. Poetry can be installed through the Windows Powershell via:
 ```
@@ -42,7 +45,7 @@ From within the cloned repo, run poetry's install command to install all the dep
 poetry install
 ```
 
-Configure your IDE to use the virtual environment poetry has created at `C:\Users\<USERNAME>\AppData\Local\pypoetry\Cache\virtualenvs`. In the case of [VSCode](https://code.visualstudio.com/) <img src="img/vscode-logo.png" height="16"/>, go to `File>Preferences>Settings` and search for `Venv Path`. Add poetry's virtual environment path to the entry field. Once you have done so, enter the command pallet by going to `View>Command Palette` and search for `Python:Select Interpreter`. Select poetry's virtual environment for the repo.
+Configure your IDE to use the virtual environment poetry has created at `C:\Users\<USERNAME>\AppData\Local\pypoetry\Cache\virtualenvs`. In the case of [VSCode](https://code.visualstudio.com/) <img src="img/vscode-logo.png" height="16"/>, enter the command pallet by going to `View>Command Palette` and search for `Python:Select Interpreter`. Select the appropriate poetry virtual environment for the repo.
 
 Install the pre-commit script and hooks using:
 ```

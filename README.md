@@ -18,13 +18,16 @@ TODO: Add project description
 ## Setup
 This section will take you through the procedure to configure your development environment. At a glance:
 1. Install project's python version
+1. Install Git
 1. Install poetry
 1. Clone repository
 1. Run poetry install
 1. Configure IDE virtual environment
 1. Install pre-commit hooks
 
-Begin by installing the project's python version.
+Begin by installing the project's python version. See the badges at the top of the README for the version number.
+
+If not already installed, install [git](https://git-scm.com/).
 
 The repo employs [poetry](https://python-poetry.org/) <img src="img/poetry-logo.png" height="16"/> as its dependency and environment manager. Poetry can be installed through the Windows Powershell via:
 ```

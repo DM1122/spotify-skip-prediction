@@ -1,6 +1,8 @@
 # stdlib
 import time
 
+import csv
+
 # external
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,28 +11,27 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, plot_confusion_matrix
 from sklearn.model_selection import train_test_split
 
-# Load data
-X_train = pd.read_csv("datahandler/trimmed_merged_no_track_id_or_session_id.csv") #load data from csv
+def load_data():
+    # Load data
+    X_train = pd.read_csv("datahandler/trimmed_merged_no_track_id_or_session_id.csv") #load data from csv
 
-drop_columns = ["mode"] # drop unimportant columns
-X_train.drop(labels=drop_columns, axis=1, inplace=True)
+    drop_columns = ["mode"] # drop unimportant columns
+    X_train.drop(labels=drop_columns, axis=1, inplace=True)
 
-y_train = X_train["skip"]
-X_train.drop(labels="skip", axis=1, inplace=True) #ground truth from train_data
+    y_train = X_train["skip"]
+    X_train.drop(labels="skip", axis=1, inplace=True) #ground truth from train_data
 
-# split data 60% train, 20% validation, 20% test
-X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, 
-                            test_size=0.2, random_state=1)
+    # split data 60% train, 20% validation, 20% test
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, 
+                                test_size=0.2, random_state=1)
 
-X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, 
-                            test_size=0.25, random_state=1) # 0.25 x 0.8 = 0.2
 
-print("X_train:", len(X_train))
-print("y_train:", len(y_train))
-print("X_val:", len(X_val))
-print("y_val:", len(y_val))
-print("X_test:", len(X_test))
-print("y_test:", len(y_test))
+    print("X_train:", len(X_train))
+    print("y_train:", len(y_train))
+    print("X_val:", len(X_val))
+    print("y_val:", len(y_val))
+
+    return X_train, y_train, X_val, y_val
 
 
 # Hyperparameters (96 combinations)
@@ -99,6 +100,9 @@ def get_test_accuracy(model, X_test, y_test):
     score = accuracy_score(test_pred, y_test)
     print("Test Accuracy:", score)
 
+    return test_pred
+
+def confusion_matrix(model, X_test, y_test, test_pred):
     # Confusion matrix
     class_names = ["Skipped", "Not Skipped"]
     print("Confusion Matrix:")
@@ -121,16 +125,18 @@ def get_test_accuracy(model, X_test, y_test):
 
 
 # Main code to run
+X_train, y_train, X_val, y_val = load_data()
 best_train_acc, best_val_acc, parameters = tune_parameters(
     n_estimators, lr, max_depth
 )  # tune to get best parameters
-# load best model
-best_model = GradientBoostingClassifier(
-    n_estimators=int(parameters[0]),
-    learning_rate=parameters[1],
-    max_depth=int(parameters[2]),
-    random_state=1,
-)
-classifier = best_model.fit(X_train, y_train)
-# get test accuracy & confusion matrix
-get_test_accuracy(best_model, X_test, y_test)
+
+# Save parameters to csv
+headers = ["n_estimators", "lr", "max_depth"]
+with open('baseline_model/baseline_model_parameters.csv', 'w') as f:
+    writer = csv.writer(f)
+
+    # write the header
+    writer.writerow(headers)
+
+    # write the data
+    writer.writerow(parameters)

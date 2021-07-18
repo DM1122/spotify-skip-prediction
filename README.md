@@ -4,6 +4,7 @@
 [![Pre-Commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
 [![GitHub repo size](https://img.shields.io/github/repo-size/DM1122/spotify-skip-prediction)](https://github.com/DM1122/spotify-skip-prediction)
 [![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/DM1122/spotify-skip-prediction)](https://github.com/DM1122/spotify-skip-prediction)
+![Lines of code](https://img.shields.io/tokei/lines/github/DM1122/fpcnn)
 
 # Spotify Skip Prediction
 <p align="left"><img src="img/spotify-logo.png" height="64"></p>
@@ -57,9 +58,9 @@ You're now ready to start contributing!
 ## Adding Packages
 To add a new package to the poetry virtual environment, install it via:
 ```
-poetry add <PACKAGE>
+poetry add <package>
 ```
-This is poetry's version of `pip install <PACKAGE>`.
+This is poetry's version of `pip install <package>`.
 
 ## Testing
 This repo uses [pytest](https://docs.pytest.org/en/6.2.x/) for unit testing. To run all unit tests, call:
@@ -68,9 +69,9 @@ This repo uses [pytest](https://docs.pytest.org/en/6.2.x/) for unit testing. To 
 pytest -v
 ```
 
-You can find an interactive report of test results in `./logs/pytest-report.html`. Indivdual tests can also be specified as follows:
+You can find an interactive report of test results in `./logs/pytest-report.html`. Individual tests can also be specified as follows:
 ```
-pytest tests/test_main.py::my_test_function
+pytest tests/test_<filename>.py::<function name>
 ```
 
 Groups of tests can be run using markers. Assign a marker decorator to the group of functions you want to test like this:

@@ -9,12 +9,12 @@ import torch
 import torchinfo
 
 # project
-from core import models
+from spotify_skip_prediction.core import models
 
 LOG = logging.getLogger(__name__)
 
 
-@pytest.mark.skip(reason="WIP")
+@pytest.mark.skip("Not implemented")
 def test_linearparametric():
     """WIP."""
 

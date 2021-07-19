@@ -16,8 +16,9 @@ from sklearn import datasets as skd
 from torch.utils import tensorboard
 
 # project
-from core import models
-from libs import datalib, plotlib
+from spotify_skip_prediction.core import models
+from spotify_skip_prediction.datahandler import data_handler
+from spotify_skip_prediction.libs import datalib, plotlib
 
 LOG = logging.getLogger(__name__)
 
@@ -87,7 +88,7 @@ class Trainer:
         epoch = 1
 
         LOG.info("Beginning training session")
-        self.__checkpoint(step=i)
+        self._checkpoint(step=i)
 
         while i < iterations:
             LOG.debug("Epoch {epoch} commencing")
@@ -106,18 +107,22 @@ class Trainer:
                 i += 1
 
                 if i % 10 == 0:
-                    self.__checkpoint(step=i, inputs=inputs, labels=labels)
+                    self._checkpoint(step=i, inputs=inputs, labels=labels)
 
                 if i >= iterations:
-                    self.__checkpoint(step=i, inputs=inputs, labels=labels)
+                    self._checkpoint(step=i, inputs=inputs, labels=labels)
                     break
 
             epoch += 1
 
         return self.writer
 
-    def test(self, dataloader):
+    def test(self, dataloader, samples=None):
         """Computes test loss and accuracy metrics using a given dataloader
+
+        Args:
+            dataloader: Pytorch dataloader.
+            samples (int): Number of samples to test on from dataloader.
 
         Returns:
             (tuple): tuple containing:
@@ -127,6 +132,8 @@ class Trainer:
         loss_sum = 0
         correct_sum = 0
 
+        samples = len(dataloader) if samples is None else samples
+        i = 0
         with torch.no_grad():
             for inputs, labels in dataloader:
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
@@ -145,12 +152,16 @@ class Trainer:
                 except RuntimeError:
                     correct_sum = 0
 
-        loss = loss_sum / len(self.dataloader_test)
-        acc = correct_sum / len(self.dataloader_test)
+                i += 1
+                if i >= samples:
+                    break
+
+        loss = loss_sum / len(dataloader)
+        acc = correct_sum / len(dataloader)
 
         return loss, acc
 
-    def __checkpoint(self, step, inputs=None, labels=None):
+    def _checkpoint(self, step, inputs=None, labels=None):
         """Conducts a checkpoint of the current model state by testing and logging to
         Tensorboard.
 
@@ -272,7 +283,7 @@ class Tuner:
         """
 
         opt_res = skopt.gp_minimize(
-            func=self.__blackbox,
+            func=self._blackbox,
             dimensions=self.space,
             base_estimator=None,
             n_calls=n_calls,
@@ -284,7 +295,7 @@ class Tuner:
             y0=None,
             random_state=None,
             verbose=True,
-            callback=self.__callback,
+            callback=self._callback,
             n_points=10000,
             n_restarts_optimizer=None,
             xi=0.01,
@@ -321,7 +332,7 @@ class Tuner:
         """
 
         opt_res = skopt.gp_minimize(
-            func=self.__blackbox,
+            func=self._blackbox,
             dimensions=self.space,
             base_estimator=None,
             n_calls=n_calls,
@@ -333,7 +344,7 @@ class Tuner:
             y0=None,
             random_state=None,
             verbose=True,
-            callback=self.__callback,
+            callback=self._callback,
             n_points=10000,
             n_restarts_optimizer=None,
             xi=0.01,
@@ -361,7 +372,7 @@ class Tuner:
 
         winsound.MessageBeep()
 
-    def __blackbox(self, params):
+    def _blackbox(self, params):
         """The blackbox function to be optimized.
 
         Args:
@@ -393,7 +404,7 @@ class Tuner:
         return float(loss)
 
     @staticmethod
-    def __callback(opt_res):
+    def _callback(opt_res):
         LOG.debug(f"Hyperparameters that were just tested: {opt_res.x_iters[-1]}")
 
     def _get_dataloaders(self, params):
@@ -426,12 +437,13 @@ class Tuner_Autoencoder_Test(Tuner):
             skopt.space.space.Categorical(
                 categories=[1, 4, 8], transform="identity", name="radius"
             ),
-            # skopt.space.space.Categorical(
-            #     categories=[1, 4, 8], transform="identity", name="embed_size"
-            # ),
+            skopt.space.space.Categorical(
+                categories=[1, 4, 8], transform="identity", name="embed_size"
+            ),
         ]
 
     def _get_dataloaders(self, params):
+        """Creates train, test, and validation dataloader."""
         # region dataset preprocessing
         features, _ = skd.load_wine(return_X_y=True)
 
@@ -467,6 +479,67 @@ class Tuner_Autoencoder_Test(Tuner):
             pin_memory=True,
         )
         # endregion
+
+        return dataloader_train, dataloader_test, dataloader_valid
+
+    def _build_model(self, params):
+        model = models.AutoEncoder(
+            input_size=13, embed_size=int(params[3]), radius=int(params[2])
+        ).to(self.device)
+
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=float(params[0]))
+        criterion = torch.nn.MSELoss(reduction="sum")
+
+        return model, optimizer, criterion
+
+    def _record_hparams(self, writer, params, loss, acc):
+        """Records the current hyperparameters along with metrics to the Tensorboard
+            writer.
+
+        Args:
+            writer (SummaryWriter): The tensorboard writer provided by the Trainer.
+            params (list): list of evaluated hyperparameters.
+            loss (torch.Tensor): Final test loss output from Trainer.
+            acc (torch.Tensor): Final accuracy output from Trainer.
+        """
+        writer.add_hparams(
+            hparam_dict={
+                "lr": float(params[0]),
+                "bs": int(params[1]),
+                "radius": int(params[2]),
+            },
+            metric_dict={"Metric/loss": float(loss), "Metric/acc": float(acc)},
+        )
+
+
+class Tuner_Autoencoder_Spotify(Tuner):
+    """A tuner for the Spotify autoencoder model."""
+
+    def __init__(self):
+        super().__init__()
+
+        self.space = [
+            skopt.space.space.Real(
+                low=0.0001,
+                high=1.0,
+                name="lr",
+            ),
+            skopt.space.space.Categorical(
+                categories=[1, 4, 8, 16, 32, 64, 128, 256],
+                transform="identity",
+                name="bs",
+            ),
+            skopt.space.space.Categorical(
+                categories=[1, 4, 8], transform="identity", name="radius"
+            ),
+        ]
+
+    def _get_dataloaders(self, params):
+        (
+            dataloader_train,
+            dataloader_test,
+            dataloader_valid,
+        ) = data_handler.get_dataloaders(batch_size=int(params[1]))
 
         return dataloader_train, dataloader_test, dataloader_valid
 
@@ -663,6 +736,74 @@ class Tuner_RNN_Test(Tuner):
             pin_memory=True,
         )
         # endregion
+
+        return dataloader_train, dataloader_test, dataloader_valid
+
+    def _build_model(self, params):
+        model = models.RNN(
+            input_size=5,
+            hidden_size=int(params[2]),
+            num_rnn_layers=int(params[3]),
+            output_size=1,
+        ).to(self.device)
+
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=float(params[0]))
+        criterion = torch.nn.MSELoss(reduction="sum")
+
+        return model, optimizer, criterion
+
+    def _record_hparams(self, writer, params, loss, acc):
+        """Records the current hyperparameters along with metrics to the Tensorboard
+            writer.
+
+        Args:
+            writer (SummaryWriter): The tensorboard writer provided by the Trainer.
+            params (list): list of evaluated hyperparameters.
+            loss (torch.Tensor): Final test loss output from Trainer.
+            acc (torch.Tensor): Final accuracy output from Trainer.
+        """
+        writer.add_hparams(
+            hparam_dict={
+                "lr": float(params[0]),
+                "bs": int(params[1]),
+                "hs": int(params[2]),
+                "layers": int(params[3]),
+            },
+            metric_dict={"Metric/loss": float(loss), "Metric/acc": float(acc)},
+        )
+
+
+class Tuner_RNN_Spotify(Tuner):
+    """A tuner for the RNN model."""
+
+    def __init__(self):
+        super().__init__()
+
+        self.space = [
+            skopt.space.space.Real(
+                low=0.0001,
+                high=1.0,
+                name="lr",
+            ),
+            skopt.space.space.Categorical(
+                categories=[1, 4, 8, 16, 32, 64, 128, 256],
+                transform="identity",
+                name="bs",
+            ),
+            skopt.space.space.Categorical(
+                categories=[1, 4, 8, 16, 32], transform="identity", name="hs"
+            ),
+            skopt.space.space.Categorical(
+                categories=[1, 4, 8], transform="identity", name="layers"
+            ),
+        ]
+
+    def _get_dataloaders(self, params):
+        (
+            dataloader_train,
+            dataloader_test,
+            dataloader_valid,
+        ) = data_handler.get_dataloaders(batch_size=int(params[1]))
 
         return dataloader_train, dataloader_test, dataloader_valid
 

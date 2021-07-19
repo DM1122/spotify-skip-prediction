@@ -15,13 +15,13 @@ from pmdarima import datasets as pmd
 from sklearn import datasets as skd
 
 # project
-from core import gym, models
-from libs import datalib, plotlib
+from spotify_skip_prediction.core import gym, models
+from spotify_skip_prediction.libs import datalib, plotlib
 
 LOG = logging.getLogger(__name__)
 
 
-@pytest.mark.skip(reason="WIP")
+@pytest.mark.skip("Not implemented")
 def test_trainer_regression():
     """Test trainer at regression task using Boston house-prices dataset and dense
     model."""
@@ -29,7 +29,7 @@ def test_trainer_regression():
     LOG.info(f"Using {device}")
 
 
-@pytest.mark.skip(reason="WIP")
+@pytest.mark.skip("Not implemented")
 def test_trainer_binary_classification():
     """Test trainer at binary classification task using breast cancer dataset and dense
     model."""
@@ -442,7 +442,7 @@ def test_trainer_classification():
     )
 
 
-@pytest.mark.skip(reason="WIP")
+@pytest.mark.skip("Not implemented")
 def test_trainer_timeseries_classification():
     """Test trainer at timeseries classification task using x dataset and RNN model."""
     device = gym.get_device()

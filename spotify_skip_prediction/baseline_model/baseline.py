@@ -1,7 +1,6 @@
 # stdlib
-import time
-
 import csv
+import time
 
 # external
 import matplotlib.pyplot as plt
@@ -11,20 +10,23 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, plot_confusion_matrix
 from sklearn.model_selection import train_test_split
 
+
 def load_data():
     # Load data
-    X_train = pd.read_csv("datahandler/trimmed_merged_no_track_id_or_session_id.csv") #load data from csv
+    X_train = pd.read_csv(
+        "datahandler/trimmed_merged_no_track_id_or_session_id.csv"
+    )  # load data from csv
 
-    drop_columns = ["mode"] # drop unimportant columns
+    drop_columns = ["mode"]  # drop unimportant columns
     X_train.drop(labels=drop_columns, axis=1, inplace=True)
 
     y_train = X_train["skip"]
-    X_train.drop(labels="skip", axis=1, inplace=True) #ground truth from train_data
+    X_train.drop(labels="skip", axis=1, inplace=True)  # ground truth from train_data
 
     # split data 60% train, 20% validation, 20% test
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, 
-                                test_size=0.2, random_state=1)
-
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train, y_train, test_size=0.2, random_state=1
+    )
 
     print("X_train:", len(X_train))
     print("y_train:", len(y_train))
@@ -38,6 +40,7 @@ def load_data():
 n_estimators = [1, 10, 20, 50, 100, 200]  # 6 parameters
 lr = [0.001, 0.01, 0.5, 1]  # 4 parameters
 max_depth = [1, 2, 5, 10]  # 4 parameters
+
 
 def baseline(n_estimators, lr, max_depth, model_num):
     # Gradient boosted trees
@@ -65,6 +68,7 @@ def baseline(n_estimators, lr, max_depth, model_num):
 
     return train_acc, val_acc, baseline_model
 
+
 def tune_parameters(n_estimators, lr, max_depth):
     model_num = 0
     cur_train_acc = 0
@@ -90,6 +94,7 @@ def tune_parameters(n_estimators, lr, max_depth):
     print("Optimized validation accuracy:", cur_val_acc)
     return cur_train_acc, cur_val_acc, parameters
 
+
 # Final test accuracy
 def get_test_accuracy(model, X_test, y_test):
     """
@@ -101,6 +106,7 @@ def get_test_accuracy(model, X_test, y_test):
     print("Test Accuracy:", score)
 
     return test_pred
+
 
 def confusion_matrix(model, X_test, y_test, test_pred):
     # Confusion matrix
@@ -132,7 +138,7 @@ best_train_acc, best_val_acc, parameters = tune_parameters(
 
 # Save parameters to csv
 headers = ["n_estimators", "lr", "max_depth"]
-with open('baseline_model/baseline_model_parameters.csv', 'w') as f:
+with open("baseline_model/baseline_model_parameters.csv", "w") as f:
     writer = csv.writer(f)
 
     # write the header

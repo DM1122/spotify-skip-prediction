@@ -9,6 +9,6 @@ import pytest
 LOG = logging.getLogger(__name__)
 
 
-@pytest.mark.skip(reason="WIP")
+@pytest.mark.skip("Not implemented")
 def test_xyz():
     """A test."""

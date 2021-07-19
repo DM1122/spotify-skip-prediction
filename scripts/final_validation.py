@@ -1,16 +1,15 @@
+# external
+import numpy as np
+import pandas as pd
 from baseline_model.baseline import *
 from core.gym import *
 from core.models import *
-
-
-from sklearn.metrics import confusion_matrix
-import numpy as np
-import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import confusion_matrix
 
 # Get test data
-X_test = pd.read_csv("datahandler/test_data.csv") # placeholder for test data
-y_test = X_test["skip"]    # ground truth
+X_test = pd.read_csv("datahandler/test_data.csv")  # placeholder for test data
+y_test = X_test["skip"]  # ground truth
 X_test.drop(labels="skip", axis=1, inplace=True)
 
 # Baseline model
@@ -32,7 +31,7 @@ confusion_matrix(baseline_model, X_test, y_test, baseline_test_pred)
 
 # Our model
 best_model = RNN()  # use optimized parameters
-state = torch.load("best_model")    # placeholder for trained model
+state = torch.load("best_model")  # placeholder for trained model
 best_model.load_state_dict(state)
 
 # Data loader for testing

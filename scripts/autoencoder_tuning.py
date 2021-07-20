@@ -28,5 +28,5 @@ LOG = logging.getLogger(__name__)
 # region main
 LOG.info("Starting autoencoder tuning")
 tuner = gym.Tuner_Autoencoder_Spotify()
-tuner.explore(n_calls=3)
+tuner.explore(n_calls=64)
 # endregion

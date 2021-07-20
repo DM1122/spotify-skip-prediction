@@ -14,10 +14,11 @@ import torchvision
 from pmdarima import datasets as pmd
 from sklearn import datasets as skd
 from torch.utils import tensorboard
+from tqdm.auto import tqdm
 
 # project
 from spotify_skip_prediction.core import models
-from spotify_skip_prediction.datahandler import data_handler
+from spotify_skip_prediction.datahandler import data_loaders
 from spotify_skip_prediction.libs import datalib, plotlib
 
 LOG = logging.getLogger(__name__)
@@ -90,6 +91,13 @@ class Trainer:
         LOG.info("Beginning training session")
         self._checkpoint(step=i)
 
+        pbar = tqdm(
+            desc="Training model",
+            total=iterations,
+            leave=True,
+            unit="it",
+            dynamic_ncols=True,
+        )
         while i < iterations:
             LOG.debug("Epoch {epoch} commencing")
             for inputs, labels in self.dataloader_train:
@@ -112,8 +120,10 @@ class Trainer:
                 if i >= iterations:
                     self._checkpoint(step=i, inputs=inputs, labels=labels)
                     break
+                pbar.update()
 
             epoch += 1
+        pbar.close()
 
         return self.writer
 
@@ -539,13 +549,13 @@ class Tuner_Autoencoder_Spotify(Tuner):
             dataloader_train,
             dataloader_test,
             dataloader_valid,
-        ) = data_handler.get_dataloaders(batch_size=int(params[1]))
+        ) = data_loaders.get_autoencoder_dataloaders(batch_size=int(params[1]))
 
         return dataloader_train, dataloader_test, dataloader_valid
 
     def _build_model(self, params):
         model = models.AutoEncoder(
-            input_size=13, embed_size=4, radius=int(params[2])
+            input_size=28, embed_size=8, radius=int(params[2])
         ).to(self.device)
 
         optimizer = torch.optim.Adam(params=model.parameters(), lr=float(params[0]))
@@ -803,13 +813,13 @@ class Tuner_RNN_Spotify(Tuner):
             dataloader_train,
             dataloader_test,
             dataloader_valid,
-        ) = data_handler.get_dataloaders(batch_size=int(params[1]))
+        ) = data_loaders.get_rnn_dataloaders(batch_size=int(params[1]))
 
         return dataloader_train, dataloader_test, dataloader_valid
 
     def _build_model(self, params):
         model = models.RNN(
-            input_size=5,
+            input_size=8,
             hidden_size=int(params[2]),
             num_rnn_layers=int(params[3]),
             output_size=1,

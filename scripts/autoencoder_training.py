@@ -10,7 +10,7 @@ import torchinfo
 
 # project
 from spotify_skip_prediction.core import gym, models
-from spotify_skip_prediction.datahandler import data_handler
+from spotify_skip_prediction.datahandler import data_loaders
 
 # region paths config
 log_path = Path("logs/scripts")
@@ -21,8 +21,13 @@ models_path = Path("models")
 # region logging config
 log_path.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
-    filename=(log_path / Path(__file__).stem).with_suffix(".log"),
-    filemode="w",
+    # filename=(log_path / Path(__file__).stem).with_suffix(".log"),
+    handlers=[
+        logging.FileHandler(
+            (log_path / Path(__file__).stem).with_suffix(".log"), "w", encoding="utf-8"
+        )
+    ],
+    # filemode="w",
     format="%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
     datefmt="%Y-%m-%d %H:%M:%S",
     level=logging.INFO,
@@ -38,10 +43,14 @@ LOG.info(f"Using {device}")
 
 
 # dataloaders
-dataloader_train, dataloader_test, dataloader_valid = data_handler.get_dataloaders()
+(
+    dataloader_train,
+    dataloader_test,
+    dataloader_valid,
+) = data_loaders.get_autoencoder_dataloaders(batch_size=16)
 
 # model definiton
-model = models.AutoEncoder(input_size=13, embed_size=4, radius=1).to(device)
+model = models.AutoEncoder(input_size=28, embed_size=8, radius=4).to(device)
 summary = torchinfo.summary(
     model=model,
     input_data=next(iter(dataloader_train))[0],
@@ -52,7 +61,6 @@ LOG.info(f"Model:\n{summary}")
 
 optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
 criterion = torch.nn.MSELoss(reduction="sum")
-
 
 trainer = gym.Trainer(
     model=model,

@@ -64,30 +64,44 @@ def raw_to_encoder(df):
     return output
 
 
-def encoder_to_model(data):
+def encoder_to_model(encoded_data, raw_data):
+
     """
-    Calls the autoencoder and encodes the input to one value
-    Outputs a 2D array of values, with -1 appended to end for shorter datasets
+    Inputs: encoded data from the autoencoder, filepath to track_list.csv
+    Outpus: torch tensor of data split by session_id with -1 appended to end for shorter encoded_datasets
     """
     # prep output, temp tensors
-    output = torch.Tensor()
-    temp = torch.ones(1, 20)
+    output = []
+    temp = []
+
+    # find lengths of each session
+    sess_length = session_counter(raw_data)
+
+    # flatten encoded input data
+    encoded_data = flatten(encoded_data.to_numpy())
+
+    # counters
+    j = 0
+    k = 0
+
+    print(sess_length)
+    print(encoded_data)
+
     # iterate through all the sessions
-    for i in range(len(data)):
-        sess_length = len(data[i])
-        # iterate through each song in each session
-        for j in range(20):
-            # Put in the encoded values into the tensor
-            # if songs in session than 20 (the max), put in -1 to pad
-            if j < sess_length:
-                temp[0, j] = encoder_to_rnn_collector(data[i, j])
-            else:
-                temp[0, j] = -1 * torch.ones(1)
+    for data in encoded_data:
+        k += 1
+        temp.append(data)
+        if k == sess_length[j]:
+            temp = temp + zero_list(20 - k)
+            output.append(temp)
+            temp = []
+            k = 0
+            j += 1
 
         # concatenate the temp tensor onto the output tensor
-        output = torch.cat((output, temp), 0)
 
-    return output
+    print(output)
+    return torch.tensor(output)
 
 
 ## Helper Functions
@@ -98,8 +112,24 @@ def mergeLeftInOrder(x, y, on=None):
     return z
 
 
-# Optional Args TBD
-def encoder_to_rnn_collector(data, InputSize=29, EmbedSize=10, Radius=10):
-    encoded = AutoEncoder(InputSize, EmbedSize, Radius)
+def session_counter(file):
+    df = file  # pd.read_csv(file)
+    df = df.drop_duplicates(subset=["session_id"], keep="first")
+    df = df[["session_length"]]
+    df = df.values.tolist()
+    return flatten(df)
 
-    return torch.Tensor(encoded.forward(data))
+
+def flatten(list):
+    flat_list = []
+    for sublist in list:
+        for item in sublist:
+            flat_list.append(item)
+    return flat_list
+
+
+def zero_list(length):
+    out = []
+    for i in range(length):
+        out.append(0)
+    return out

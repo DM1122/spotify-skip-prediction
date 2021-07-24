@@ -6,6 +6,7 @@ import pathlib
 from io import StringIO
 
 # external
+import numpy as np
 import pandas as pd
 import sklearn
 import torch
@@ -13,7 +14,9 @@ import torch
 LOG = logging.getLogger(__name__)
 
 # region path config
-data_path = pathlib.Path("data/trimmed_merged_no_track_id_or_session_id.csv")
+tracklist_path = pathlib.Path("../../data/track_list.csv")
+features_path = pathlib.Path("../../data/track_features.csv")
+
 # endregion
 
 
@@ -31,32 +34,82 @@ def get_autoencoder_dataloaders(batch_size):
             (train dataloader, test dataloader, validation dataloader)
     """
 
-    # import
-    LOG.info(f"Importing data from: {data_path}")
-    data = pd.read_csv(
-        filepath_or_buffer=data_path,
+    # import tracklist
+    LOG.info(f"Importing tracklist from: {tracklist_path}")
+    tracklist = pd.read_csv(
+        filepath_or_buffer=tracklist_path,
         true_values=["True"],
         false_values=["False"],
     )
-    LOG.info(f"Data ({type(data)}):\n{data}")
-    info_buf = StringIO()
-    data.info(buf=info_buf)
-    LOG.info(f"Data info:\n{info_buf.getvalue()}")
-    data_desc = data.describe(include="all")
-    LOG.info(f"Data stats:\n{data_desc}")
+    LOG.info(f"Tracklist data ({type(tracklist)}):\n{tracklist}")
+    info_buf = StringIO()  # call with an argument? Not sure how this works
+    tracklist.info(buf=info_buf)
+    LOG.info(f"Tracklist info:\n{info_buf.getvalue()}")
+    data_desc = tracklist.describe(include="all")
+    LOG.info(f"Tracklist stats:\n{data_desc}")
+
+    # change column names and filter, I tried tracklist.rename(columns={'track_id_clean':'track_id'} but it didn't work
+    to_keep = [
+        "session_id",
+        "session_position",
+        "session_length",
+        "track_id_clean",
+        "skip_2",
+    ]
+    tracklist = tracklist[to_keep]
+    tracklist.columns = [
+        "session_id",
+        "session_position",
+        "session_length",
+        "track_id",
+        "skip",
+    ]
+
+    # import features
+    LOG.info(f"Importing features from: {features_path}")
+    features = pd.read_csv(
+        filepath_or_buffer=features_path,
+        true_values=["True"],
+        false_values=["False"],
+    )
+    LOG.info(f"Features ({type(features)}):\n{features}")
+    info_buf = StringIO()  # call with an argument? Not sure how this works
+    features.info(buf=info_buf)
+    LOG.info(f"Features info:\n{info_buf.getvalue()}")
+    data_desc = features.describe(include="all")
+    LOG.info(f"Features stats:\n{data_desc}")
 
     # filter
     LOG.info("Filtering data")
-    data = data.drop(columns=["session_position", "session_length", "mode"])
-    LOG.info(f"Data filtered ({type(data)}):\n{data}")
+    features_columns_to_drop = ["mode"]
+    data = data.drop(columns=features_columns_to_drop)
+    LOG.info(f"Filtered ({type(data)}):\n{data}")
+
+    # merge
+    LOG.info("Merging data")
+
+    data = mergeLeftInOrder(tracklist, features)
+
+    # calcualte ranges to split
+    data_train = 0.8
+    data_test = 0.1
+    data_valid = 0.1
+
+    LOG.info(
+        f"Splitting data into {data_train} for training, {data_test} for testing, {data_valid} for validation."
+    )
+
+    total_length = len(data)
+
+    split_1 = int(total_length * data_train)
+    split_2 = int(total_length * (data_train + data_test))
 
     # split
-    LOG.info("Splitting data")
-    data_train = data[0:134304]  # 80%
+    data_train = data[0:split_1]
     LOG.debug(f"Data train:\n{data_train}")
-    data_test = data[134304:151092]  # 10%
+    data_test = data[split_1 + 1 : split_2]
     LOG.debug(f"Data test:\n{data_test}")
-    data_valid = data[151092:167880]  # 10%
+    data_valid = data[split_2 + 1 : -1]
     LOG.debug(f"Data valid:\n{data_valid}")
 
     # features and labels
@@ -158,3 +211,10 @@ def get_autoencoder_dataloaders(batch_size):
     # endregion
 
     return dataloader_train, dataloader_test, dataloader_valid
+
+
+def mergeLeftInOrder(x, y, on=None):
+    x = x.copy()
+    x["Order"] = np.arange(len(x))
+    z = x.merge(y, how="left", on=on).set_index("Order").loc[np.arange(len(x)), :]
+    return z

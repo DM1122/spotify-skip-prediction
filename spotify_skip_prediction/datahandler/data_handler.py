@@ -92,7 +92,7 @@ def encoder_to_model(encoded_data, raw_data):
         k += 1
         temp.append(data)
         if k == sess_length[j]:
-            temp = temp + zero_list(20 - k)
+            temp = temp + empty_pad(20 - k)
             output.append(temp)
             temp = []
             k = 0
@@ -128,8 +128,8 @@ def flatten(list):
     return flat_list
 
 
-def zero_list(length):
+def empty_pad(length):
     out = []
     for i in range(length):
-        out.append(0)
+        out.append(-1)
     return out

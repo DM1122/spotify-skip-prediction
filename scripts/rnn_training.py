@@ -9,7 +9,7 @@ import torchinfo
 
 # project
 from spotify_skip_prediction.core import gym, models
-from spotify_skip_prediction.datahandler import data_handler
+from spotify_skip_prediction.datahandler import data_loaders
 
 # region paths config
 log_path = Path("logs/scripts")
@@ -23,7 +23,7 @@ logging.basicConfig(
     filemode="w",
     format="%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
     datefmt="%Y-%m-%d %H:%M:%S",
-    level=logging.INFO,
+    level=logging.DEBUG,
 )
 LOG = logging.getLogger(__name__)
 # endregion
@@ -34,7 +34,11 @@ device = gym.get_device()
 LOG.info(f"Using {device}")
 
 # dataloaders
-dataloader_train, dataloader_test, dataloader_valid = data_handler.get_dataloaders()
+(
+    dataloader_train,
+    dataloader_test,
+    dataloader_valid,
+) = data_loaders.get_rnn_dataloaders(batch_size=128)
 
 # model definiton
 LOG.info("Instantiating model")

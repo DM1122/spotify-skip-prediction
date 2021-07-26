@@ -8,7 +8,7 @@ import torch
 
 # project
 from spotify_skip_prediction.core import gym
-from spotify_skip_prediction.datahandler import data_handler
+from spotify_skip_prediction.datahandler import data_loaders
 
 # region paths config
 log_path = Path("logs/scripts")
@@ -34,10 +34,11 @@ device = gym.get_device()
 LOG.info(f"Using {device}")
 
 
-dataloader = data_handler.get_dataset()
+dataloader = data_loaders.get_autoencoder_dataloaders_no_split(batch_size=128)
 
 
-model = torch.load("models/auotencoder_spotify.pt")
+
+model = torch.load("models/autoencoder_spotify.pt")
 
 with torch.no_grad():
     for inputs, labels in dataloader:

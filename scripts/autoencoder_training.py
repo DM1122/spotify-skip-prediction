@@ -30,7 +30,7 @@ logging.basicConfig(
     # filemode="w",
     format="%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
     datefmt="%Y-%m-%d %H:%M:%S",
-    level=logging.INFO,
+    level=logging.DEBUG,
 )
 LOG = logging.getLogger(__name__)
 # endregion
@@ -47,10 +47,10 @@ LOG.info(f"Using {device}")
     dataloader_train,
     dataloader_test,
     dataloader_valid,
-) = data_loaders.get_autoencoder_dataloaders(batch_size=16)
+) = data_loaders.get_autoencoder_dataloaders(batch_size=128)
 
 # model definiton
-model = models.AutoEncoder(input_size=28, embed_size=8, radius=4).to(device)
+model = models.AutoEncoder(input_size=28, embed_size=4, radius=1).to(device)
 summary = torchinfo.summary(
     model=model,
     input_data=next(iter(dataloader_train))[0],
@@ -59,7 +59,7 @@ summary = torchinfo.summary(
 )
 LOG.info(f"Model:\n{summary}")
 
-optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
+optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
 criterion = torch.nn.MSELoss(reduction="sum")
 
 trainer = gym.Trainer(
@@ -71,7 +71,7 @@ trainer = gym.Trainer(
     device=device,
     logname="test_unsupervised",
 )
-tb = trainer.train(iterations=100)
+tb = trainer.train(iterations=500)
 tb.close()
 
 

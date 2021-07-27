@@ -8,12 +8,16 @@
 
 # Spotify Skip Prediction
 <p align="left"><img src="img/spotify-logo.png" height="64"></p>
-APS360 project repository
+APS360 Final Project
 
-TODO: Add project description
+The challenge: predict if users will skip or listen to the music they're served on the Spotify music streaming platform. A solution to the Spotify Sequential Skip Prediction Challenge 2018 on [AIcrowd](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge). A supervised sequential classification task.
 
-# Systems
+Recommender systems play a crucial role in the digital age where media is abundant, and serving the right media to the right user at the right time means everything in terms of revenue generation. It is in the best interest of digital media providers the likes of Spotify, Youtube, Facebook, Google, and others to maximize audience retention. A model which is able to accurately predict user intent given significant nuance is necessary; machine learning is consequently the right tool for the task.
+
+# System Architecture
 <p align="center"><img src="img/system-diagram.png" height="256"></p>
+
+We employ an autoencoder model for feature extraction and a vanilla RNN model for inference on the autoencoder embeddings. Our results are evaluated against a gradient boosting model for classification.
 
 # Contribution
 ## Setup

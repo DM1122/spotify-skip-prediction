@@ -104,7 +104,7 @@ This repo is configured to use [pre-commit](https://pre-commit.com/) hooks. The 
 Pre-commit will run the hooks on commit, but when a hook fails, they can be run manually to debug using:
 
 ```
-isort . & black . & pylint_runner
+isort . ; black . ; pylint_runner
 ```
 
 

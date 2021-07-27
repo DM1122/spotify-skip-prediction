@@ -8,7 +8,8 @@
 
 # Spotify Skip Prediction
 <p align="left"><img src="img/spotify-logo.png" height="64"></p>
-APS360 Final Project
+
+**APS360 Final Project**
 
 The challenge: predict if users will skip or listen to the music they're served on the Spotify music streaming platform. A solution to the Spotify Sequential Skip Prediction Challenge 2018 on [AIcrowd](https://www.aicrowd.com/challenges/spotify-sequential-skip-prediction-challenge). A supervised sequential classification task.
 

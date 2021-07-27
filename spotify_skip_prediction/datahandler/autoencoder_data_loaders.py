@@ -2,29 +2,30 @@
 
 # stdlib
 import logging
-from os import read
 import pathlib
 from io import StringIO
+from os import read
 
 # external
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
 import torch
+from sklearn.preprocessing import StandardScaler
 
 LOG = logging.getLogger(__name__)
 
 # region path config venv
-#tracklist_path = pathlib.Path("data/track_list.csv")
-#features_path = pathlib.Path("data/track_features.csv")
-#sample_data_path = pathlib.Path("data/trimmed_merged_no_track_id_or_session_id.csv")
+# tracklist_path = pathlib.Path("data/track_list.csv")
+# features_path = pathlib.Path("data/track_features.csv")
+# sample_data_path = pathlib.Path("data/trimmed_merged_no_track_id_or_session_id.csv")
 # endregion
 
 # region path config local
 tracklist_path = "../../data/track_list.csv"
 features_path = "../../data/track_features.csv"
-#sample_data_path = "../../data/trimmed_merged_no_track_id_or_session_id.csv"
+# sample_data_path = "../../data/trimmed_merged_no_track_id_or_session_id.csv"
 # endregion
+
 
 def get_autoencoder_dataloaders(batch_size):
     """Builds dataloaders for autoencoder model using Pytorch Tensor dataloader.
@@ -94,7 +95,15 @@ def get_autoencoder_dataloaders(batch_size):
     LOG.info("Merging data")
 
     data = mergeLeftInOrder(tracklist, features)
-    data = data.drop(columns=["session_position","session_id","session_position","session_length","track_id"]) # these can't be scaled
+    data = data.drop(
+        columns=[
+            "session_position",
+            "session_id",
+            "session_position",
+            "session_length",
+            "track_id",
+        ]
+    )  # these can't be scaled
     LOG.info(f"TEST:\n{data}")
 
     # calcualte ranges to split
@@ -134,9 +143,7 @@ def get_autoencoder_dataloaders(batch_size):
 
     # scaling
     LOG.info("Scaling data")
-    scaler_features = StandardScaler(
-        with_mean=False, with_std=True
-    )
+    scaler_features = StandardScaler(with_mean=False, with_std=True)
 
     scaler_features.fit(
         features_train
@@ -155,14 +162,13 @@ def get_autoencoder_dataloaders(batch_size):
 
     features_valid = scaler_features.transform(features_valid)
 
-
-    #save files to disc
+    # save files to disc
     np.savetxt("../../data/features_train.csv", features_train, delimiter=",")
-    np.savetxt("../../data/labels_train.csv", labels_train, fmt='%.0d', delimiter=",")
+    np.savetxt("../../data/labels_train.csv", labels_train, fmt="%.0d", delimiter=",")
     np.savetxt("../../data/features_valid.csv", features_valid, delimiter=",")
-    np.savetxt("../../data/labels_valid.csv", labels_valid, fmt='%.0d', delimiter=",")
+    np.savetxt("../../data/labels_valid.csv", labels_valid, fmt="%.0d", delimiter=",")
     np.savetxt("../../data/features_test.csv", features_test, delimiter=",")
-    np.savetxt("../../data/labels_test.csv", labels_test, fmt='%.0d', delimiter=",")
+    np.savetxt("../../data/labels_test.csv", labels_test, fmt="%.0d", delimiter=",")
 
     LOG.info(f"Features train saved at ../../data/features_train.csv")
     LOG.info(f"Labels train saved at ../../data/labels_train.csv")
@@ -173,14 +179,16 @@ def get_autoencoder_dataloaders(batch_size):
 
     return True
 
+
 def read_autoencoder_dataloaders(
     batch_size,
-    features_train_csv = "../../data/features_train.csv", 
-    labels_train_csv = "../../data/labels_train.csv",
-    features_valid_csv = "../../data/features_valid.csv", 
-    labels_valid_csv = "../../data/labels_valid.csv",
-    features_test_csv = "../../data/features_test.csv", 
-    labels_test_csv = "../../data/labels_test.csv"):
+    features_train_csv="../../data/features_train.csv",
+    labels_train_csv="../../data/labels_train.csv",
+    features_valid_csv="../../data/features_valid.csv",
+    labels_valid_csv="../../data/labels_valid.csv",
+    features_test_csv="../../data/features_test.csv",
+    labels_test_csv="../../data/labels_test.csv",
+):
 
     LOG.info(f"Features training set is {features_train_csv}")
     LOG.info(f"Labels training set is {labels_train_csv}")
@@ -188,7 +196,6 @@ def read_autoencoder_dataloaders(
     LOG.info(f"Labels validation set is {labels_valid_csv}")
     LOG.info(f"Features testing set is {features_test_csv}")
     LOG.info(f"Labels testing set is {labels_test_csv}")
-
 
     # read files to pandas then numpy
     features_train = (pd.read_csv(features_train_csv)).to_numpy()
@@ -202,7 +209,6 @@ def read_autoencoder_dataloaders(
         "Labels train numpy "
         f"({labels_train.shape}, {labels_train.dtype}):\n{labels_train}"
     )
-
 
     # region datasets
     LOG.info("Creating datasets")
@@ -257,6 +263,7 @@ def read_autoencoder_dataloaders(
     # endregion
 
     return dataloader_train, dataloader_test, dataloader_valid
+
 
 def get_autoencoder_dataloaders_no_split(batch_size):
     """Builds dataloaders for autoencoder model using Pytorch Tensor dataloader.
@@ -326,10 +333,16 @@ def get_autoencoder_dataloaders_no_split(batch_size):
     LOG.info("Merging data")
 
     data = mergeLeftInOrder(tracklist, features)
-    data = data.drop(columns=["session_position","session_id","session_position","session_length","track_id"]) # these can't be scaled
+    data = data.drop(
+        columns=[
+            "session_position",
+            "session_id",
+            "session_position",
+            "session_length",
+            "track_id",
+        ]
+    )  # these can't be scaled
     LOG.info(f"TEST:\n{data}")
-
-
 
     # features and labels
     LOG.info("Extracting features and labels")
@@ -338,12 +351,9 @@ def get_autoencoder_dataloaders_no_split(batch_size):
     labels_train = data.loc[:, ["skip"]]
     LOG.debug(f"Labels train:\n{labels_train}")
 
-
     # scaling
     LOG.info("Scaling data")
-    scaler_features =StandardScaler(
-        with_mean=False, with_std=True
-    )
+    scaler_features = StandardScaler(with_mean=False, with_std=True)
 
     scaler_features.fit(
         features_train
@@ -391,6 +401,7 @@ def get_autoencoder_dataloaders_no_split(batch_size):
     # endregion
 
     return dataloader_train
+
 
 def get_rnn_dataloaders(batch_size):
     """Builds dataloaders for autoencoder model using Pytorch Tensor dataloader.
@@ -446,9 +457,7 @@ def get_rnn_dataloaders(batch_size):
 
     # scaling
     LOG.info("Scaling data")
-    scaler_features =StandardScaler(
-        with_mean=False, with_std=True
-    )
+    scaler_features = StandardScaler(with_mean=False, with_std=True)
 
     scaler_features.fit(
         features_train
@@ -531,12 +540,13 @@ def get_rnn_dataloaders(batch_size):
 
     return dataloader_train, dataloader_test, dataloader_valid
 
-    
+
 def mergeLeftInOrder(x, y, on=None):
     x = x.copy()
     x["Order"] = np.arange(len(x))
     z = x.merge(y, how="left", on=on).set_index("Order").loc[np.arange(len(x)), :]
     return z
+
 
 get_autoencoder_dataloaders(10)
 read_autoencoder_dataloaders(10)

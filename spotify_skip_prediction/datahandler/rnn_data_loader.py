@@ -6,7 +6,7 @@ def get_rnn_dataloaders(encoded_data, raw_data):
     """
     # prep output, temp tensors
     output = []
-    temp = [] # holds data for a session to be appended to output
+    temp = []  # holds data for a session to be appended to output
 
     # find lengths of each session from track_list.csv since this data was dropped when encoding occured
     # session_counter returns an array where each element is the length of a session in the encoded data.
@@ -17,17 +17,19 @@ def get_rnn_dataloaders(encoded_data, raw_data):
     encoded_data = flatten(encoded_data.to_numpy())
 
     # counters
-    j = 0 #tracks position in the session counter
-    k = 0 #tracks position in a batch size of 20
+    j = 0  # tracks position in the session counter
+    k = 0  # tracks position in a batch size of 20
 
     # iterate through all the sessions in encoded data
     for data in encoded_data:
         k += 1
         temp.append(data)
-        if k == sess_length[j]: # append songs to temp until number of songs in that session is reached
-            temp = temp + empty_pad(k) # pad -1 to keep consistent batch size
-            output.append(temp) #append temp to output list
-            temp = [] # reset variables
+        if (
+            k == sess_length[j]
+        ):  # append songs to temp until number of songs in that session is reached
+            temp = temp + empty_pad(k)  # pad -1 to keep consistent batch size
+            output.append(temp)  # append temp to output list
+            temp = []  # reset variables
             k = 0
             j += 1
 
@@ -52,7 +54,7 @@ def flatten(list):
 
 
 def empty_pad(length_in):
-    length=20-length_in
+    length = 20 - length_in
     out = []
     for i in range(length):
         out.append(-1)

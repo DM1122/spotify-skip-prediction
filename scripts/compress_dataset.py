@@ -37,7 +37,6 @@ LOG.info(f"Using {device}")
 dataloader = data_loaders.get_autoencoder_dataloaders_no_split(batch_size=128)
 
 
-
 model = torch.load("models/autoencoder_spotify.pt")
 
 with torch.no_grad():

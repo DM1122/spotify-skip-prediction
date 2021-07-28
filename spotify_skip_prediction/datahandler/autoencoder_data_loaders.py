@@ -8,13 +8,13 @@ from os import read
 
 # external
 import numpy as np
-from numpy.lib.shape_base import split
 import pandas as pd
 import torch
+from numpy.lib.shape_base import split
 from sklearn.preprocessing import StandardScaler
 
 LOG = logging.getLogger(__name__)
- 
+
 # region path config venv
 # tracklist_path = pathlib.Path("data/track_list.csv")
 # features_path = pathlib.Path("data/track_features.csv")
@@ -22,8 +22,8 @@ LOG = logging.getLogger(__name__)
 # endregion
 
 # region path config local test
-#tracklist_path = "../../data/track_list.csv"
-#features_path = "../../data/track_features.csv"
+# tracklist_path = "../../data/track_list.csv"
+# features_path = "../../data/track_features.csv"
 # sample_data_path = "../../data/trimmed_merged_no_track_id_or_session_id.csv"
 # endregion
 
@@ -31,9 +31,9 @@ LOG = logging.getLogger(__name__)
 tracklist_path = "../../data/log_0_20180715_000000000000.csv"
 features_path_1 = "../../data/tf_000000000000.csv"
 features_path_2 = "../../data/tf_000000000001.csv"
-#tracklist_path = "../../data/track_list.csv"
-#features_path_1 = "../../data/track_features.csv"
-#features_path_2 = "../../data/empty.csv"
+# tracklist_path = "../../data/track_list.csv"
+# features_path_1 = "../../data/track_features.csv"
+# features_path_2 = "../../data/empty.csv"
 
 
 def get_autoencoder_dataloaders(batch_size):
@@ -80,7 +80,6 @@ def get_autoencoder_dataloaders(batch_size):
         "skip",
     ]
 
-
     # import features
     LOG.info(f"Importing features from: {features_path_1} and {features_path_2}")
     features_1 = pd.read_csv(
@@ -108,15 +107,13 @@ def get_autoencoder_dataloaders(batch_size):
     features = features.drop(columns=features_columns_to_drop)
     LOG.info(f"Filtered ({type(features)}):\n{features}")
 
-
-
     # merge
     LOG.info("Merging data")
 
     data = mergeLeftInOrder(tracklist, features)
 
     # remove listening sessions which are not 20 songs long
-    data=data[np.any(data == 20, axis = 1)]
+    data = data[np.any(data == 20, axis=1)]
 
     data = data.drop(
         columns=[
@@ -142,17 +139,15 @@ def get_autoencoder_dataloaders(batch_size):
 
     split_index_1 = int(round_to_20(total_length * data_train))
     split_index_2 = int(round_to_20(total_length * (data_train + data_test)))
-    
 
     # split
     data_train = data[0:split_index_1]
     LOG.debug(f"Data train:\n{data_train}")
-    data_test = data[split_index_1  : split_index_2-1]
+    data_test = data[split_index_1 : split_index_2 - 1]
     LOG.debug(f"Data test:\n{data_test}")
-    data_valid = data[split_index_2  : -1]
+    data_valid = data[split_index_2:-1]
     LOG.debug(f"Data valid:\n{data_valid}")
 
-    
     # features and labels
     LOG.info("Extracting features and labels")
     features_train = data_train.drop("skip", axis=1)
@@ -201,23 +196,22 @@ def get_autoencoder_dataloaders(batch_size):
     LOG.info(f"Labels validation saved at ../../data/labels_valid.csv")
     LOG.info(f"Features testing saved at ../../data/features_test.csv")
     LOG.info(f"Labels testing saved at ../../data/labels_test.csv")
-    
 
-    #features_train.to_csv ("../../data/let_me_sleeptrain.csv", sep=",")
-    #features_test.to_csv ("../../data/let_me_sleeptest.csv", sep=",")
-    #features_valid.to_csv ("../../data/let_me_sleepvalid.csv", sep=",")
+    # features_train.to_csv ("../../data/let_me_sleeptrain.csv", sep=",")
+    # features_test.to_csv ("../../data/let_me_sleeptest.csv", sep=",")
+    # features_valid.to_csv ("../../data/let_me_sleepvalid.csv", sep=",")
 
     return True
 
 
 def read_autoencoder_dataloaders(
     batch_size,
-    features_train_csv="../../data/features_train.csv",
-    labels_train_csv="../../data/labels_train.csv",
-    features_valid_csv="../../data/features_valid.csv",
-    labels_valid_csv="../../data/labels_valid.csv",
-    features_test_csv="../../data/features_test.csv",
-    labels_test_csv="../../data/labels_test.csv",
+    features_train_csv="data/features_train.csv", # "../../data/features_train.csv"
+    labels_train_csv="data/labels_train.csv", # "../../data/labels_train.csv"
+    features_valid_csv="data/features_valid.csv", # "../../data/features_valid.csv"
+    labels_valid_csv="data/labels_valid.csv", # "../../data/labels_valid.csv"
+    features_test_csv="data/features_test.csv", # "../../data/features_test.csv"
+    labels_test_csv="data/labels_test.csv", # "../../data/labels_test.csv"
 ):
 
     LOG.info(f"Features training set is {features_train_csv}")
@@ -293,6 +287,8 @@ def read_autoencoder_dataloaders(
     # endregion
 
     return dataloader_train, dataloader_test, dataloader_valid
+
+
 
 '''
 def get_autoencoder_dataloaders_no_split(batch_size):
@@ -573,17 +569,20 @@ def get_rnn_dataloaders(batch_size):
 
 '''
 
+
 def mergeLeftInOrder(x, y, on=None):
     x = x.copy()
     x["Order"] = np.arange(len(x))
     z = x.merge(y, how="left", on=on).set_index("Order").loc[np.arange(len(x)), :]
     return z
 
+
 def session_counter(df):
     df = df.drop_duplicates(subset=["session_id"], keep="first")
     df = df[["session_length"]]
     df = df.values.tolist()
     return pd.DataFrame(flatten(df))
+
 
 def flatten(list):
     flat_list = []
@@ -592,7 +591,9 @@ def flatten(list):
             flat_list.append(item)
     return flat_list
 
-def round_to_20(x, base=20):
-    return base * round(x/base)
 
-get_autoencoder_dataloaders(20)
+def round_to_20(x, base=20):
+    return base * round(x / base)
+
+
+# get_autoencoder_dataloaders(20)

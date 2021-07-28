@@ -8,7 +8,7 @@ import torch
 
 # project
 from spotify_skip_prediction.core import gym
-from spotify_skip_prediction.datahandler import data_loaders
+from spotify_skip_prediction.datahandler import autoencoder_data_loaders
 
 # region paths config
 log_path = Path("logs/scripts")
@@ -33,20 +33,23 @@ LOG.info("Starting dataset compression")
 device = gym.get_device()
 LOG.info(f"Using {device}")
 
-
-dataloader = data_loaders.get_autoencoder_dataloaders_no_split(batch_size=128)
+# train
+LOG.info("Compressing train dataset")
+(
+    dataloader_train,
+    dataloader_test,
+    dataloader_valid,
+) = autoencoder_data_loaders.read_autoencoder_dataloaders(batch_size=134303) # process the whole thing
 
 
 model = torch.load("models/autoencoder_spotify.pt")
 
+inputs_train, labels_train = next(iter(dataloader_train))
+inputs_train, labels_train = inputs_train.to(device), labels_train.to(device)
+
+# train loss
 with torch.no_grad():
-    for inputs, labels in dataloader:
-        inputs, labels = inputs.to(device), labels.to(device)
-
-        # forward pass
-        logits = model.encoder(inputs)
-
-        # save tensor or send to datahandler helper to store dataset
-
+    logits_train = model(inputs_train)
+    
 
 # endregion

@@ -202,7 +202,7 @@ class RNN(torch.nn.Module):
 
         """
         x, _ = self.rnn(x)
-        x = self.fc(x)
+        x = self.fc(x)  # TODO: add output activation
 
         return x
 

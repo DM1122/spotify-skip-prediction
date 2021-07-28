@@ -10,7 +10,7 @@ import torchinfo
 
 # project
 from spotify_skip_prediction.core import gym, models
-from spotify_skip_prediction.datahandler import data_loaders
+from spotify_skip_prediction.datahandler import autoencoder_data_loaders
 
 # region paths config
 log_path = Path("logs/scripts")
@@ -47,7 +47,7 @@ LOG.info(f"Using {device}")
     dataloader_train,
     dataloader_test,
     dataloader_valid,
-) = data_loaders.get_autoencoder_dataloaders(batch_size=128)
+) = autoencoder_data_loaders.read_autoencoder_dataloaders(batch_size=128)
 
 # model definiton
 model = models.AutoEncoder(input_size=28, embed_size=4, radius=1).to(device)
@@ -71,7 +71,7 @@ trainer = gym.Trainer(
     device=device,
     logname="test_unsupervised",
 )
-tb = trainer.train(iterations=500)
+tb = trainer.train(iterations=1000)
 tb.close()
 
 

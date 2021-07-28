@@ -18,7 +18,7 @@ from tqdm.auto import tqdm
 
 # project
 from spotify_skip_prediction.core import models
-from spotify_skip_prediction.datahandler import data_loaders
+from spotify_skip_prediction.datahandler import autoencoder_data_loaders
 from spotify_skip_prediction.libs import datalib, plotlib
 
 LOG = logging.getLogger(__name__)
@@ -549,13 +549,13 @@ class Tuner_Autoencoder_Spotify(Tuner):
             dataloader_train,
             dataloader_test,
             dataloader_valid,
-        ) = data_loaders.get_autoencoder_dataloaders(batch_size=int(params[1]))
+        ) = autoencoder_data_loaders.read_autoencoder_dataloaders(batch_size=int(params[1]))
 
         return dataloader_train, dataloader_test, dataloader_valid
 
     def _build_model(self, params):
         model = models.AutoEncoder(
-            input_size=28, embed_size=8, radius=int(params[2])
+            input_size=28, embed_size=4, radius=int(params[2])
         ).to(self.device)
 
         optimizer = torch.optim.Adam(params=model.parameters(), lr=float(params[0]))

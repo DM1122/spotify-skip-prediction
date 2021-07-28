@@ -1,12 +1,15 @@
 # from spotify_skip_prediction.datahandler.autoencoder_data_loaders import get_autoencoder_dataloaders
+# external
 import numpy as np
-from numpy.lib.shape_base import split
 import pandas as pd
 import torch
+from numpy.lib.shape_base import split
 from sklearn.preprocessing import StandardScaler
 
 
-def get_rnn_dataloaders(encoded_data, sess_length = 20, feature_width = 4, dataset_type = "train"):
+def get_rnn_dataloaders(
+    encoded_data, sess_length=20, feature_width=4, dataset_type="train"
+):
 
     """
     Inputs: encoded data from the autoencoder as a 2D torch tensor with song as dim 1, features as dim 2; filepath to sesssion_lengths.csv
@@ -14,29 +17,25 @@ def get_rnn_dataloaders(encoded_data, sess_length = 20, feature_width = 4, datas
     Read with torch.load()
         dim 1: batches of listening sessions
         dim 2: each song in a session
-        dim 3: features of that song 
+        dim 3: features of that song
     """
 
-    encoded_data=pd.read_csv(encoded_data, header=None)
-    #scale the data
+    encoded_data = pd.read_csv(encoded_data, header=None)
+    # scale the data
     scaler_features = StandardScaler(with_mean=False, with_std=True)
 
-    scaler_features.fit(
-        encoded_data
-    )
+    scaler_features.fit(encoded_data)
 
-    encoded_data = scaler_features.transform(encoded_data
-    )
+    encoded_data = scaler_features.transform(encoded_data)
 
-
-    #reshape data as specified in docstring
-    encoded_data=encoded_data.reshape(1, -1)
+    # reshape data as specified in docstring
+    encoded_data = encoded_data.reshape(1, -1)
     encoded_data = encoded_data.squeeze()
     encoded_data = encoded_data.reshape(-1, sess_length, feature_width)
 
-    output=encoded_data
+    output = encoded_data
 
-    #begin region
+    # begin region
     """
     # snippet to save a 3d tensor with numpy from https://stackoverflow.com/a/3685339, but this is just for us humans to look at. Use torch.save on line 61 for saving to file.
     print(output)
@@ -58,11 +57,9 @@ def get_rnn_dataloaders(encoded_data, sess_length = 20, feature_width = 4, datas
             outfile.write('# New slice\n')
     #end region
     """
-    filename="../../data/encoded_features_"+dataset_type+".tensor"
+    filename = "../../data/encoded_features_" + dataset_type + ".tensor"
     torch.save(output, filename)
     return output
 
 
-
-
-get_rnn_dataloaders("../../data/features_train.csv")
+# get_rnn_dataloaders("../../data/features_train.csv")

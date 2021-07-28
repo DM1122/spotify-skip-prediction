@@ -139,7 +139,7 @@ class AutoEncoder(torch.nn.Module):
             input_size=input_size,
             output_size=embed_size,
             num_layers=radius,
-            act_hidden=torch.nn.functional.elu,
+            act_hidden=torch.nn.functional.elu, #torch.nn.functional.elu
             act_final=torch.nn.functional.elu,
         )
         self.decoder = LinearParametric(

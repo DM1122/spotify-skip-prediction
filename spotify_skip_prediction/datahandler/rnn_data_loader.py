@@ -19,20 +19,20 @@ def get_rnn_dataloaders(encoded_data, dataset_type, sess_length = 20, feature_wi
         dim 3: features of that song
     """
 
-    encoded_data = pd.read_csv(encoded_data, header=None)
+    # encoded_data = pd.read_csv(encoded_data, header=None)                             input is a pytorch tensor, cannot pass tensor to read_csv
     # scale the data
-    scaler_features = StandardScaler(with_mean=False, with_std=True)
+    # scaler_features = StandardScaler(with_mean=False, with_std=True)
 
-    scaler_features.fit(encoded_data)
+    # scaler_features.fit(encoded_data)                                                   # don't think scaling is neccessary here, the inputs to the autoencoder are already scaled, meaning the outputs should as well
 
-    encoded_data = scaler_features.transform(encoded_data)
+    # encoded_data = scaler_features.transform(encoded_data)
 
-    encoded_data = scaler_features.transform(encoded_data)
+    # encoded_data = scaler_features.transform(encoded_data)
 
     #reshape data as specified in docstring
     encoded_data = encoded_data.reshape(1, -1)
     encoded_data = encoded_data.squeeze()
-    encoded_data = encoded_data.reshape(-1, sess_length, feature_width)
+    encoded_data = encoded_data.reshape(-1, sess_length, feature_width)            # RuntimeError: shape '[-1, 20, 4]' is invalid for input of size 3760484. I recall running into a similar problem, see tests/test_core/test_gym.py/test_trainer_timeseries_regression()
 
     output = encoded_data
 
@@ -112,6 +112,8 @@ def read_rnn_dataloaders(features, labels, dataset_type, batch_size=20):
 
     return dataloader
 
-get_rnn_dataloaders("../../data/features_test.csv", "test")
+if __name__ == "__main__":
 
-read_rnn_dataloaders("../../data/encoded_features_test.tensor", "../../data/labels_test.csv", "test")
+    get_rnn_dataloaders("../../data/features_test.csv", "test")
+
+    read_rnn_dataloaders("../../data/encoded_features_test.tensor", "../../data/labels_test.csv", "test")

@@ -1,2 +1,2 @@
-n_estimators,lr,max_depth
-200.0,0.01,10.0
+n_estimators,lr,max_depth,train acc,val acc
+10.0,0.5,5.0,0.5823306329918195,0.5670121515368121

@@ -28,5 +28,5 @@ LOG = logging.getLogger(__name__)
 # region main
 LOG.info("Starting RNN tuning")
 tuner = gym.Tuner_RNN_Spotify()
-tuner.explore(n_calls=3)
+tuner.tune(n_calls=64)
 # endregion

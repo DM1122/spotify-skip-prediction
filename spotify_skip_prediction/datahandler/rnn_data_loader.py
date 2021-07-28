@@ -10,7 +10,7 @@ def get_rnn_dataloaders(encoded_data, sess_length = 20, feature_width = 4, datas
 
     """
     Inputs: encoded data from the autoencoder as a 2D torch tensor with song as dim 1, features as dim 2; filepath to sesssion_lengths.csv
-    Outputs: 3D tensor of data split by session_id with -1 appended to end for shorter encoded_datasets
+    Outputs: 3D numpy tensor of data split by session_id with -1 appended to end for shorter encoded_datasets
     Read with torch.load()
         dim 1: batches of listening sessions
         dim 2: each song in a session

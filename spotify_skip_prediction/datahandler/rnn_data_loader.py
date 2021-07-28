@@ -1,61 +1,68 @@
-def get_rnn_dataloaders(encoded_data, raw_data):
+# from spotify_skip_prediction.datahandler.autoencoder_data_loaders import get_autoencoder_dataloaders
+import numpy as np
+from numpy.lib.shape_base import split
+import pandas as pd
+import torch
+from sklearn.preprocessing import StandardScaler
+
+
+def get_rnn_dataloaders(encoded_data, sess_length = 20, feature_width = 4, dataset_type = "train"):
 
     """
-    Inputs: encoded data from the autoencoder, filepath to track_list.csv
-    Outpus: torch tensor of data split by session_id with -1 appended to end for shorter encoded_datasets
+    Inputs: encoded data from the autoencoder as a 2D torch tensor with song as dim 1, features as dim 2; filepath to sesssion_lengths.csv
+    Outputs: 3D tensor of data split by session_id with -1 appended to end for shorter encoded_datasets
+    Read with torch.load()
+        dim 1: batches of listening sessions
+        dim 2: each song in a session
+        dim 3: features of that song 
     """
-    # prep output, temp tensors
-    output = []
-    temp = []  # holds data for a session to be appended to output
 
-    # find lengths of each session from track_list.csv since this data was dropped when encoding occured
-    # session_counter returns an array where each element is the length of a session in the encoded data.
-    # e.g. [20, 20, 15, 20] would be four listening sessions (batches) of length 20, 20, 15, 20 tracks
-    sess_length = session_counter(raw_data)
+    encoded_data=pd.read_csv(encoded_data, header=None)
+    #scale the data
+    scaler_features = StandardScaler(with_mean=False, with_std=True)
 
-    # flatten encoded input data since it comes in [[0], [1], ...] format
-    encoded_data = flatten(encoded_data.to_numpy())
+    scaler_features.fit(
+        encoded_data
+    )
 
-    # counters
-    j = 0  # tracks position in the session counter
-    k = 0  # tracks position in a batch size of 20
-
-    # iterate through all the sessions in encoded data
-    for data in encoded_data:
-        k += 1
-        temp.append(data)
-        if (
-            k == sess_length[j]
-        ):  # append songs to temp until number of songs in that session is reached
-            temp = temp + empty_pad(k)  # pad -1 to keep consistent batch size
-            output.append(temp)  # append temp to output list
-            temp = []  # reset variables
-            k = 0
-            j += 1
-
-    return torch.tensor(output)
+    encoded_data = scaler_features.transform(encoded_data
+    )
 
 
-## Helper Functions
-def session_counter(file):
-    df = file  # pd.read_csv(file)
-    df = df.drop_duplicates(subset=["session_id"], keep="first")
-    df = df[["session_length"]]
-    df = df.values.tolist()
-    return flatten(df)
+    #reshape data as specified in docstring
+    encoded_data=encoded_data.reshape(1, -1)
+    encoded_data = encoded_data.squeeze()
+    encoded_data = encoded_data.reshape(-1, sess_length, feature_width)
+
+    output=encoded_data
+
+    #begin region
+    """
+    # snippet to save a 3d tensor with numpy from https://stackoverflow.com/a/3685339, but this is just for us humans to look at. Use torch.save on line 61 for saving to file.
+    print(output)
+    with open("../../data/encoded_features_"+dataset_type+".csv", 'w') as outfile:
+    # I'm writing a header here just for the sake of readability
+    # Any line starting with "#" will be ignored by numpy.loadtxt
+        outfile.write('# Array shape: {0}\n'.format(output.shape))
+        
+        # Iterating through a ndimensional array produces slices along
+        # the last axis. This is equivalent to data[i,:,:] in this case
+        for data_slice in output:
+
+            # The formatting string indicates that I'm writing out
+            # the values in left-justified columns 7 characters in width
+            # with 2 decimal places.  
+            np.savetxt(outfile, data_slice, fmt='%-7.2f')
+
+            # Writing out a break to indicate different slices...
+            outfile.write('# New slice\n')
+    #end region
+    """
+    filename="../../data/encoded_features_"+dataset_type+".tensor"
+    torch.save(output, filename)
+    return output
 
 
-def flatten(list):
-    flat_list = []
-    for sublist in list:
-        for item in sublist:
-            flat_list.append(item)
-    return flat_list
 
 
-def empty_pad(length_in):
-    length = 20 - length_in
-    out = []
-    for i in range(length):
-        out.append(-1)
-    return out
+get_rnn_dataloaders("../../data/features_train.csv")

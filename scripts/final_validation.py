@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from spotify_skip_prediction.baseline_model import baseline
 from spotify_skip_prediction.core import gym, models
-#from spotify_skip_prediction.datahandler import data_loaders
+from spotify_skip_prediction.datahandler import rnn_data_loader
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import confusion_matrix
 import torch
@@ -27,25 +27,33 @@ baseline.create_confusion_matrix(baseline_model, X_test, y_test, baseline_test_p
 
 
 # Our model
-best_model = models.RNN()  #TODO:  use optimized parameters
-state = torch.load("rnn_spotify")  # load trained model
+best_model = models.RNN(
+    input_size=5, 
+    hidden_size=16, 
+    num_rnn_layers=4, 
+    output_size=1)  #TODO:  use optimized parameters
+state = torch.load("rnn_spotify.pt")  # load trained model
 best_model.load_state_dict(state)   
 
-# TODO: Data loader for testing
-_, _, dataloader_valid = data_loaders.get_rnn_dataloaders()
+# Data loader for testing
+dataloader_test = rnn_data_loader.read_rnn_dataloaders(
+        features="../../data/encoded_features_test.tensor", 
+        labels="../../data/labels_testcsv", 
+        dataset_type="test", 
+        batch_size=1)
 
 # Get loss and accuracy of model using test data
-loss, acc = gym.Trainer.test(best_model, dataloader_valid)
+loss, acc = gym.Trainer.test(best_model, dataloader_test)
 
 # Plot confusion matrix
-samples = len(dataloader_valid)
+samples = len(dataloader_test)
 predictions = np.zeros(samples)
 i = 0
 with torch.no_grad():
-    for inputs, labels in dataloader_valid and (i < samples):
+    for inputs, labels in dataloader_test and (i < samples):
         # forward pass
         logits = best_model(inputs)
         predictions[i] = torch.argmax(input=logits, dim=1, keepdim=False)
         i += 1
-confusion_matrix(best_model, dataloader_valid, labels, predictions, title="RNN Model")
+confusion_matrix(best_model, dataloader_test, labels, predictions, title="RNN_Model")
 

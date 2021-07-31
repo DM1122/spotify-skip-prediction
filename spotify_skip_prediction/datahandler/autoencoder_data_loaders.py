@@ -28,15 +28,15 @@ LOG = logging.getLogger(__name__)
 # endregion
 
 # region path config local real data
-tracklist_path = "../../data/log_0_20180715_000000000000.csv"
-features_path_1 = "../../data/tf_000000000000.csv"
-features_path_2 = "../../data/tf_000000000001.csv"
+# tracklist_path = "../../data/log_0_20180715_000000000000.csv"
+# features_path_1 = "../../data/tf_000000000000.csv"
+# features_path_2 = "../../data/tf_000000000001.csv"
 # tracklist_path = "../../data/track_list.csv"
 # features_path_1 = "../../data/track_features.csv"
 # features_path_2 = "../../data/empty.csv"
 
 
-def get_autoencoder_dataloaders(batch_size):
+def get_autoencoder_dataloaders(tracklist_path, features_path_1="tf_000000000000", features_path_2="tf_000000000001", batch_size=16, iterator=""):
     """Builds dataloaders for autoencoder model using Pytorch Tensor dataloader.
 
     Features and labels are the same for the purposes of autoencoder reconstruction.
@@ -48,6 +48,18 @@ def get_autoencoder_dataloaders(batch_size):
         tuple: A tuple of torch.utils.data.dataloader.DataLoader objects consisting of
             (train dataloader, test dataloader, validation dataloader)
     """
+
+    raw_dir="../../data/raw/" #outside env
+    encoded_dir="../../data/for_encoder/"
+
+    #raw_dir="raw/" #inside env
+    #encoded_dir="for_encoder/"
+
+    extension=".csv"
+
+    tracklist_path=raw_dir+tracklist_path+extension
+    features_path_1=raw_dir+features_path_1+extension
+    features_path_2=raw_dir+features_path_2+extension
 
     # import tracklist
     LOG.info(f"Importing tracklist from: {tracklist_path}")
@@ -143,9 +155,9 @@ def get_autoencoder_dataloaders(batch_size):
     # split
     data_train = data[0:split_index_1]
     LOG.debug(f"Data train:\n{data_train}")
-    data_test = data[split_index_1 : split_index_2 - 1]
+    data_test = data[split_index_1 : split_index_2]
     LOG.debug(f"Data test:\n{data_test}")
-    data_valid = data[split_index_2:-1]
+    data_valid = data[split_index_2:]
     LOG.debug(f"Data valid:\n{data_valid}")
 
     # features and labels
@@ -183,19 +195,20 @@ def get_autoencoder_dataloaders(batch_size):
     features_valid = scaler_features.transform(features_valid)
 
     # save files to disc
-    np.savetxt("../../data/features_train.csv", features_train, delimiter=",")
-    np.savetxt("../../data/labels_train.csv", labels_train, fmt="%.0d", delimiter=",")
-    np.savetxt("../../data/features_valid.csv", features_valid, delimiter=",")
-    np.savetxt("../../data/labels_valid.csv", labels_valid, fmt="%.0d", delimiter=",")
-    np.savetxt("../../data/features_test.csv", features_test, delimiter=",")
-    np.savetxt("../../data/labels_test.csv", labels_test, fmt="%.0d", delimiter=",")
+    
+    np.savetxt(encoded_dir+"features_train"+iterator+extension, features_train, delimiter=",")
+    np.savetxt(encoded_dir+"labels_train"+iterator+extension, labels_train, fmt="%.0d", delimiter=",")
+    np.savetxt(encoded_dir+"features_valid"+iterator+extension, features_valid, delimiter=",")
+    np.savetxt(encoded_dir+"labels_valid"+iterator+extension, labels_valid, fmt="%.0d", delimiter=",")
+    np.savetxt(encoded_dir+"features_test"+iterator+extension, features_test, delimiter=",")
+    np.savetxt(encoded_dir+"labels_test"+iterator+extension, labels_test, fmt="%.0d", delimiter=",")
 
-    LOG.info(f"Features train saved at ../../data/features_train.csv")
-    LOG.info(f"Labels train saved at ../../data/labels_train.csv")
-    LOG.info(f"Features validation saved at ../../data/features_valid.csv")
-    LOG.info(f"Labels validation saved at ../../data/labels_valid.csv")
-    LOG.info(f"Features testing saved at ../../data/features_test.csv")
-    LOG.info(f"Labels testing saved at ../../data/labels_test.csv")
+    LOG.info(f"Features train saved at ../../data/for_encoder/features_train{iterator}.csv")
+    LOG.info(f"Labels train saved at ../../data/for_encoder/labels_train{iterator}.csv")
+    LOG.info(f"Features validation saved at ../../data/for_encoder/features_valid{iterator}.csv")
+    LOG.info(f"Labels validation saved at ../../data/for_encoder/labels_valid{iterator}.csv")
+    LOG.info(f"Features testing saved at ../../data/for_encoder/features_test{iterator}.csv")
+    LOG.info(f"Labels testing saved at ../../data/for_encoder/labels_test{iterator}.csv")
 
     # features_train.to_csv ("../../data/let_me_sleeptrain.csv", sep=",")
     # features_test.to_csv ("../../data/let_me_sleeptest.csv", sep=",")
@@ -205,14 +218,26 @@ def get_autoencoder_dataloaders(batch_size):
 
 
 def read_autoencoder_dataloaders(
-    batch_size,
-    features_train_csv="data/features_train.csv", # "../../data/features_train.csv"
-    labels_train_csv="data/labels_train.csv", # "../../data/labels_train.csv"
-    features_valid_csv="data/features_valid.csv", # "../../data/features_valid.csv"
-    labels_valid_csv="data/labels_valid.csv", # "../../data/labels_valid.csv"
-    features_test_csv="data/features_test.csv", # "../../data/features_test.csv"
-    labels_test_csv="data/labels_test.csv", # "../../data/labels_test.csv"
+    batch_size=16,
+    iterator="",
+    features_train_csv="features_train",
+    labels_train_csv="labels_train",
+    features_valid_csv="features_valid",
+    labels_valid_csv="labels_valid",
+    features_test_csv="features_test",
+    labels_test_csv="labels_test",
 ):
+    encoded_dir="../../data/for_encoder/" # run outside env
+    #encoded_dir="for_encoder/" # run inside env
+
+
+    extension=".csv"
+    features_train_csv=encoded_dir+features_train_csv+iterator+extension
+    labels_train_csv=encoded_dir+labels_train_csv+iterator+extension
+    features_valid_csv=encoded_dir+features_valid_csv+iterator+extension
+    labels_valid_csv=encoded_dir+labels_valid_csv+iterator+extension
+    features_test_csv=encoded_dir+features_test_csv+iterator+extension
+    labels_test_csv=encoded_dir+labels_test_csv+iterator+extension
 
     LOG.info(f"Features training set is {features_train_csv}")
     LOG.info(f"Labels training set is {labels_train_csv}")
@@ -220,6 +245,7 @@ def read_autoencoder_dataloaders(
     LOG.info(f"Labels validation set is {labels_valid_csv}")
     LOG.info(f"Features testing set is {features_test_csv}")
     LOG.info(f"Labels testing set is {labels_test_csv}")
+    LOG.info(f"Iteration {iterator}")
 
     # read files to pandas then numpy
     features_train = (pd.read_csv(features_train_csv)).to_numpy()
@@ -595,5 +621,9 @@ def flatten(list):
 def round_to_20(x, base=20):
     return base * round(x / base)
 
+#get_autoencoder_dataloaders("log_0_20180715_000000000000", iterator="1")
+#read_autoencoder_dataloaders(iterator="1")
 
-# get_autoencoder_dataloaders(20)
+for i in range (15, 23):
+    get_autoencoder_dataloaders("log_0_201807"+str(i)+"_000000000000", iterator=str(i-14))
+    print(str(i-14))

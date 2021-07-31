@@ -3,19 +3,25 @@
 # stdlib
 import logging
 from pathlib import Path
-
+import sys
 # external
 import torch
 import torchinfo
+sys.path.append('spotify_skip_prediction/core/')
 
 # project
-from spotify_skip_prediction.core import gym, models
-from spotify_skip_prediction.datahandler import data_loaders
+#from spotify_skip_prediction.core import gym, models
+#from spotify_skip_prediction.datahandler import data_loaders
+from core import gym, models
+from datahandler import data_loaders
 
 # region paths config
-log_path = Path("logs/scripts")
-output_path = Path("output")
-models_path = Path("models")
+log_path = ("../logs/scripts")
+output_path = ("output")
+models_path = ("models")
+#log_path = Path("logs/scripts")
+#output_path = Path("output")
+#models_path = Path("models")
 # endregion
 
 # region logging config

@@ -1,9 +1,9 @@
 # from spotify_skip_prediction.datahandler.autoencoder_data_loaders import get_autoencoder_dataloaders
 import logging
 import numpy as np
-from numpy.lib.shape_base import split
 import pandas as pd
 import torch
+from numpy.lib.shape_base import split
 from sklearn.preprocessing import StandardScaler
 
 LOG = logging.getLogger(__name__)
@@ -17,30 +17,29 @@ def get_rnn_dataloaders(encoded_data, dataset_type, iterator='', sess_length = 2
     Read with torch.load()
         dim 1: batches of listening sessions
         dim 2: each song in a session
-        dim 3: features of that song 
+        dim 3: features of that song
     """
     rnn_dir="../../data/for_rnn/" # run outside env
     #rnn_dir="for_rnn/" #run inside env
 
-    encoded_data=pd.read_csv(encoded_data, header=None)
+    # encoded_data = pd.read_csv(encoded_data, header=None)                             input is a pytorch tensor, cannot pass tensor to read_csv
+    # scale the data
+    # scaler_features = StandardScaler(with_mean=False, with_std=True)
 
+    # scaler_features.fit(encoded_data)                                                   # don't think scaling is neccessary here, the inputs to the autoencoder are already scaled, meaning the outputs should as well
 
-    #scale the data
-    scaler_features = StandardScaler(with_mean=False, with_std=True)
+    # encoded_data = scaler_features.transform(encoded_data)
 
-    scaler_features.fit(encoded_data)
-
-    encoded_data = scaler_features.transform(encoded_data)
-
+    # encoded_data = scaler_features.transform(encoded_data)
 
     #reshape data as specified in docstring
     encoded_data = encoded_data.reshape(1, -1)
     encoded_data = encoded_data.squeeze()
-    encoded_data = encoded_data.reshape(-1, sess_length, feature_width)
+    encoded_data = encoded_data.reshape(-1, sess_length, feature_width)            # RuntimeError: shape '[-1, 20, 4]' is invalid for input of size 3760484. I recall running into a similar problem, see tests/test_core/test_gym.py/test_trainer_timeseries_regression()
 
-    output=encoded_data
+    output = encoded_data
 
-    #begin region
+    # begin region
     """
     # snippet to save a 3d tensor with numpy from https://stackoverflow.com/a/3685339, but this is just for us humans to look at. Use torch.save on line 61 for saving to file.
     print(output)
@@ -124,6 +123,8 @@ def read_rnn_dataloaders(features, labels, dataset_type, iterator='', batch_size
 
     return dataloader
 
-get_rnn_dataloaders("../../data/for_encoder/features_test1.csv", "test", iterator='1')
+if __name__ == "__main__":
 
-read_rnn_dataloaders("encoded_features_test", "labels_test", "test", iterator='1')
+    get_rnn_dataloaders("../../data/features_test.csv", "test")
+
+    read_rnn_dataloaders("../../data/encoded_features_test.tensor", "../../data/labels_test.csv", "test")

@@ -9,7 +9,7 @@ import torchinfo
 
 # project
 from spotify_skip_prediction.core import gym, models
-from spotify_skip_prediction.datahandler import data_loaders
+from spotify_skip_prediction.datahandler import rnn_data_loader
 
 # region paths config
 log_path = Path("logs/scripts")
@@ -34,11 +34,9 @@ device = gym.get_device()
 LOG.info(f"Using {device}")
 
 # dataloaders
-(
-    dataloader_train,
-    dataloader_test,
-    dataloader_valid,
-) = data_loaders.get_rnn_dataloaders(batch_size=128)
+dataloader_train = rnn_data_loader.read_rnn_dataloaders(features="../../data/encoded_features_test.tensor", labels="../../data/labels_test.csv", dataset_type="train", batch_size=16)
+dataloader_test = rnn_data_loader.read_rnn_dataloaders(features="../../data/encoded_features_train.tensor", labels="../../data/labels_train.csv", dataset_type="test", batch_size=1)
+dataloader_valid = rnn_data_loader.read_rnn_dataloaders(features="../../data/encoded_features_valid.tensor", labels="../../data/labels_valid.csv", dataset_type="valid", batch_size=1)
 
 # model definiton
 LOG.info("Instantiating model")
@@ -54,7 +52,7 @@ summary = torchinfo.summary(
 LOG.info(f"Model:\n{summary}")
 
 optimizer = torch.optim.Adam(params=model.parameters(), lr=0.03)
-criterion = torch.nn.MSELoss(reduction="sum")
+criterion = torch.nn.BCEWithLogitsLoss(reduction="sum")
 
 # training
 trainer = gym.Trainer(
@@ -64,7 +62,7 @@ trainer = gym.Trainer(
     optimizer=optimizer,
     criterion=criterion,
     device=device,
-    logname="test_time_series",
+    logname="rnn_spotify",
 )
 tb = trainer.train(iterations=100)
 tb.close()

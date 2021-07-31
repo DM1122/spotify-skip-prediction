@@ -18,7 +18,7 @@ from tqdm.auto import tqdm
 
 # project
 from spotify_skip_prediction.core import models
-from spotify_skip_prediction.datahandler import data_loaders
+from spotify_skip_prediction.datahandler import autoencoder_data_loaders, rnn_data_loader
 from spotify_skip_prediction.libs import datalib, plotlib
 
 LOG = logging.getLogger(__name__)
@@ -549,13 +549,13 @@ class Tuner_Autoencoder_Spotify(Tuner):
             dataloader_train,
             dataloader_test,
             dataloader_valid,
-        ) = data_loaders.get_autoencoder_dataloaders(batch_size=int(params[1]))
+        ) = autoencoder_data_loaders.read_autoencoder_dataloaders(batch_size=int(params[1]))
 
         return dataloader_train, dataloader_test, dataloader_valid
 
     def _build_model(self, params):
         model = models.AutoEncoder(
-            input_size=28, embed_size=8, radius=int(params[2])
+            input_size=28, embed_size=4, radius=int(params[2])
         ).to(self.device)
 
         optimizer = torch.optim.Adam(params=model.parameters(), lr=float(params[0]))
@@ -809,24 +809,22 @@ class Tuner_RNN_Spotify(Tuner):
         ]
 
     def _get_dataloaders(self, params):
-        (
-            dataloader_train,
-            dataloader_test,
-            dataloader_valid,
-        ) = data_loaders.get_rnn_dataloaders(batch_size=int(params[1]))
+        dataloader_train = rnn_data_loader.read_rnn_dataloaders(features="../../data/encoded_features_test.tensor", labels="../../data/labels_test.csv", dataset_type="train", batch_size=int(params[1]))
+        dataloader_test = rnn_data_loader.read_rnn_dataloaders(features="../../data/encoded_features_train.tensor", labels="../../data/labels_train.csv", dataset_type="test", batch_size=int(params[1]))
+        dataloader_valid = rnn_data_loader.read_rnn_dataloaders(features="../../data/encoded_features_valid.tensor", labels="../../data/labels_valid.csv", dataset_type="valid", batch_size=int(params[1]))
 
         return dataloader_train, dataloader_test, dataloader_valid
 
     def _build_model(self, params):
         model = models.RNN(
-            input_size=8,
+            input_size=4,
             hidden_size=int(params[2]),
             num_rnn_layers=int(params[3]),
             output_size=1,
         ).to(self.device)
 
         optimizer = torch.optim.Adam(params=model.parameters(), lr=float(params[0]))
-        criterion = torch.nn.MSELoss(reduction="sum")
+        criterion = torch.nn.BCEWithLogitsLoss(reduction="sum")
 
         return model, optimizer, criterion
 

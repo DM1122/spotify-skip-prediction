@@ -403,9 +403,9 @@ class Tuner:
             optimizer=optimizer,
             criterion=criterion,
             device=self.device,
-            logname="test_tuner_unsupervised",
+            logname="RNN_test", # adjust log name
         )
-        writer = trainer.train(iterations=100)
+        writer = trainer.train(iterations=100) #CHANGED
 
         loss, acc = trainer.test(dataloader=dataloader_test)
 
@@ -554,7 +554,7 @@ class Tuner_Autoencoder_Spotify(Tuner):
             dataloader_train,
             dataloader_test,
             dataloader_valid,
-        ) = data_loaders.get_autoencoder_dataloaders(batch_size=int(params[1]))
+        ) = autoencoder_data_loaders.read_autoencoder_dataloaders(iterator= '1', batch_size=int(params[1]))
 
         return dataloader_train, dataloader_test, dataloader_valid
 
@@ -761,6 +761,7 @@ class Tuner_RNN_Test(Tuner):
             num_rnn_layers=int(params[3]),
             output_size=1,
         ).to(self.device)
+        model=model.double()
 
         optimizer = torch.optim.Adam(params=model.parameters(), lr=float(params[0]))
         criterion = torch.nn.MSELoss(reduction="sum")
@@ -801,7 +802,8 @@ class Tuner_RNN_Spotify(Tuner):
                 name="lr",
             ),
             skopt.space.space.Categorical(
-                categories=[1, 4, 8, 16, 32, 64, 128, 256],
+                categories=[1, 4, 8],
+                #categories=[1, 4, 8, 16, 32, 64, 128, 256],
                 transform="identity",
                 name="bs",
             ),
@@ -814,9 +816,9 @@ class Tuner_RNN_Spotify(Tuner):
         ]
 
     def _get_dataloaders(self, params):
-        dataloader_train = rnn_data_loader.read_rnn_dataloaders("encoded_features", "labels", "train", "1")
-        dataloader_test = rnn_data_loader.read_rnn_dataloaders("encoded_features", "labels", "test", "1")
-        dataloader_valid = rnn_data_loader.read_rnn_dataloaders("encoded_features", "labels", "valid", "1")
+        dataloader_train = rnn_data_loader.read_rnn_dataloaders("encoded_features", "labels", "train", "1", batch_size=int(params[1]))
+        dataloader_test = rnn_data_loader.read_rnn_dataloaders("encoded_features", "labels", "test", "1", batch_size=int(params[1]))
+        dataloader_valid = rnn_data_loader.read_rnn_dataloaders("encoded_features", "labels", "valid", "1", batch_size=int(params[1]))
 
         return dataloader_train, dataloader_test, dataloader_valid
 
@@ -827,6 +829,7 @@ class Tuner_RNN_Spotify(Tuner):
             num_rnn_layers=int(params[3]),
             output_size=1,
         ).to(self.device)
+        model = model.double()
 
         optimizer = torch.optim.Adam(params=model.parameters(), lr=float(params[0]))
         criterion = torch.nn.BCEWithLogitsLoss(reduction="sum")

@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 
 # project
-from spotify_skip_prediction.core import gym
+import gym
 
 # region paths config
 log_path = Path("logs/scripts")

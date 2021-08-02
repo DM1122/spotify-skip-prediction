@@ -8,8 +8,9 @@ import torch
 import torchinfo
 
 # project
-from spotify_skip_prediction.core import gym, models
-from spotify_skip_prediction.datahandler import data_loaders
+import gym
+import models
+import rnn_data_loader
 
 # region paths config
 log_path = Path("logs/scripts")
@@ -34,17 +35,16 @@ device = gym.get_device()
 LOG.info(f"Using {device}")
 
 # dataloaders
-(
-    dataloader_train,
-    dataloader_test,
-    dataloader_valid,
-) = data_loaders.get_rnn_dataloaders(batch_size=128)
+dataloader_train = rnn_data_loader.read_rnn_dataloaders('encoded_features', 'labels', 'train', iterator='1')
+dataloader_test= rnn_data_loader.read_rnn_dataloaders('encoded_features', 'labels', 'test', iterator='1')
+dataloader_valid= rnn_data_loader.read_rnn_dataloaders('encoded_features', 'labels', 'valid', iterator='1')
 
 # model definiton
 LOG.info("Instantiating model")
-model = models.RNN(input_size=5, hidden_size=16, num_rnn_layers=4, output_size=1).to(
+model = models.RNN(input_size=4, hidden_size=16, num_rnn_layers=1, output_size=1).to(
     device
 )
+model=model.double()
 summary = torchinfo.summary(
     model=model,
     input_data=next(iter(dataloader_train))[0],
@@ -53,7 +53,7 @@ summary = torchinfo.summary(
 )
 LOG.info(f"Model:\n{summary}")
 
-optimizer = torch.optim.Adam(params=model.parameters(), lr=0.03)
+optimizer = torch.optim.Adam(params=model.parameters(), lr=0.13832)
 criterion = torch.nn.MSELoss(reduction="sum")
 
 # training

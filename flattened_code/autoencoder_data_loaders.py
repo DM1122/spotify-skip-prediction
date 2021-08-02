@@ -150,8 +150,8 @@ def get_autoencoder_dataloaders(tracklist_path, features_path_1="tf_000000000000
 
     total_length = len(data)
 
-    split_index_1 = int(round_to_20(total_length * data_train))
-    split_index_2 = int(round_to_20(total_length * (data_train + data_test)))
+    split_index_1 = int(round_to_5120(total_length * data_train))
+    split_index_2 = int(round_to_5120(total_length * (data_train + data_test)))
 
     # split
     data_train = data[0:split_index_1]
@@ -220,7 +220,7 @@ def get_autoencoder_dataloaders(tracklist_path, features_path_1="tf_000000000000
 
 def read_autoencoder_dataloaders(
     batch_size=16,
-    iterator=[],
+    iterator='',
     afeatures_train_csv="features_train",
     alabels_train_csv="labels_train",
     afeatures_valid_csv="features_valid",
@@ -240,65 +240,63 @@ def read_autoencoder_dataloaders(
     features_valid_main = torch.empty(size=(0,28), dtype=torch.float).to('cuda:0')
     labels_valid_main = torch.empty(size=(0,1), dtype=torch.float).to('cuda:0')
 
-    for i in iterator:
-        i = str(i)
-        features_train_csv=''
-        labels_train_csv=''
-        features_valid_csv=''
-        labels_valid_csv=''
-        features_test_csv=''
-        labels_test_csv=''
-        extension=".csv"
-        features_train_csv=encoded_dir+afeatures_train_csv+i+extension
-        labels_train_csv=encoded_dir+alabels_train_csv+i+extension
-        features_valid_csv=encoded_dir+afeatures_valid_csv+i+extension
-        labels_valid_csv=encoded_dir+alabels_valid_csv+i+extension
-        features_test_csv=encoded_dir+afeatures_test_csv+i+extension
-        labels_test_csv=encoded_dir+alabels_test_csv+i+extension
+    features_train_csv=''
+    labels_train_csv=''
+    features_valid_csv=''
+    labels_valid_csv=''
+    features_test_csv=''
+    labels_test_csv=''
+    extension=".csv"
+    features_train_csv=encoded_dir+afeatures_train_csv+iterator+extension
+    labels_train_csv=encoded_dir+alabels_train_csv+iterator+extension
+    features_valid_csv=encoded_dir+afeatures_valid_csv+iterator+extension
+    labels_valid_csv=encoded_dir+alabels_valid_csv+iterator+extension
+    features_test_csv=encoded_dir+afeatures_test_csv+iterator+extension
+    labels_test_csv=encoded_dir+alabels_test_csv+iterator+extension
 
-        LOG.info(f"Features training set is {features_train_csv}")
-        LOG.info(f"Labels training set is {labels_train_csv}")
-        LOG.info(f"Features validation set is {features_valid_csv}")
-        LOG.info(f"Labels validation set is {labels_valid_csv}")
-        LOG.info(f"Features testing set is {features_test_csv}")
-        LOG.info(f"Labels testing set is {labels_test_csv}")
-        LOG.info(f"Iteration {iterator}")
+    LOG.info(f"Features training set is {features_train_csv}")
+    LOG.info(f"Labels training set is {labels_train_csv}")
+    LOG.info(f"Features validation set is {features_valid_csv}")
+    LOG.info(f"Labels validation set is {labels_valid_csv}")
+    LOG.info(f"Features testing set is {features_test_csv}")
+    LOG.info(f"Labels testing set is {labels_test_csv}")
+    LOG.info(f"Iteration {iterator}")
 
-        # read files to pandas then numpy
-        features_train = (pd.read_csv(features_train_csv)).to_numpy()
-        features_test = (pd.read_csv(features_test_csv)).to_numpy()
-        features_valid = (pd.read_csv(features_valid_csv)).to_numpy()
-        labels_train = (pd.read_csv(labels_train_csv)).to_numpy()
-        labels_test = (pd.read_csv(labels_test_csv)).to_numpy()
-        labels_valid = (pd.read_csv(labels_valid_csv)).to_numpy()
+    # read files to pandas then numpy
+    features_train = (pd.read_csv(features_train_csv)).to_numpy()
+    features_test = (pd.read_csv(features_test_csv)).to_numpy()
+    features_valid = (pd.read_csv(features_valid_csv)).to_numpy()
+    labels_train = (pd.read_csv(labels_train_csv)).to_numpy()
+    labels_test = (pd.read_csv(labels_test_csv)).to_numpy()
+    labels_valid = (pd.read_csv(labels_valid_csv)).to_numpy()
 
-        LOG.info(
-            "Labels train numpy "
-            f"({labels_train.shape}, {labels_train.dtype}):\n{labels_train}"
-        )
+    LOG.info(
+        "Labels train numpy "
+        f"({labels_train.shape}, {labels_train.dtype}):\n{labels_train}"
+    )
 
-        # region datasets
-        LOG.info("Appending to datasets")
+    # region datasets
+    LOG.info("Appending to datasets")
 
-        features_train = torch.tensor(features_train, dtype=torch.float).to('cuda:0')
-        labels_train = torch.tensor(labels_train, dtype=torch.float).to('cuda:0')
+    features_train = torch.tensor(features_train, dtype=torch.float).to('cuda:0')
+    labels_train = torch.tensor(labels_train, dtype=torch.float).to('cuda:0')
 
-        features_test = torch.tensor(features_test, dtype=torch.float).to('cuda:0')
-        labels_test = torch.tensor(labels_test, dtype=torch.float).to('cuda:0')
+    features_test = torch.tensor(features_test, dtype=torch.float).to('cuda:0')
+    labels_test = torch.tensor(labels_test, dtype=torch.float).to('cuda:0')
 
-        features_valid = torch.tensor(features_valid, dtype=torch.float).to('cuda:0')
-        labels_valid = torch.tensor(labels_valid, dtype=torch.float).to('cuda:0')
+    features_valid = torch.tensor(features_valid, dtype=torch.float).to('cuda:0')
+    labels_valid = torch.tensor(labels_valid, dtype=torch.float).to('cuda:0')
 
 
 
-        features_train_main = torch.cat((features_train, features_train_main), dim=0)
-        labels_train_main = torch.cat((labels_train, labels_train_main), dim=0)
+    features_train_main = torch.cat((features_train, features_train_main), dim=0)
+    labels_train_main = torch.cat((labels_train, labels_train_main), dim=0)
 
-        features_test_main = torch.cat((features_test, features_test_main), dim=0)
-        labels_test_main = torch.cat((labels_test, labels_test_main), dim=0)
+    features_test_main = torch.cat((features_test, features_test_main), dim=0)
+    labels_test_main = torch.cat((labels_test, labels_test_main), dim=0)
 
-        features_valid_main = torch.cat((features_valid, features_valid_main), dim=0)
-        labels_valid_main = torch.cat((labels_valid, labels_valid_main), dim=0)
+    features_valid_main = torch.cat((features_valid, features_valid_main), dim=0)
+    labels_valid_main = torch.cat((labels_valid, labels_valid_main), dim=0)
 
     features_train_main.to('cuda:0')
     labels_train_main.to('cuda:0')
@@ -815,7 +813,7 @@ def flatten(list):
     return flat_list
 
 
-def round_to_20(x, base=20):
+def round_to_5120(x, base=5120): #pick 5120 bc it's lcm of largest batch size in explore (256) and the dataset length (20)
     return base * round(x / base)
 
 #get_autoencoder_dataloaders("log_0_20180715_000000000000", iterator="1")

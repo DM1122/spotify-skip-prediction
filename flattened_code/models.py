@@ -4,6 +4,9 @@
 # external
 import numpy as np
 import torch
+import logging
+
+LOG = logging.getLogger(__name__)
 
 
 class LinearParametric(torch.nn.Module):
@@ -202,7 +205,7 @@ class RNN(torch.nn.Module):
 
         """
         x, _ = self.rnn(x)
-        x = self.fc(x)
+        x = torch.sigmoid(self.fc(x))
 
         return x
 

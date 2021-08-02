@@ -91,11 +91,11 @@ def read_rnn_dataloaders(features, labels, dataset_type, iterator='', batch_size
     LOG.info(f"Labels {dataset_type}set is {labels}")
 
     # read files to pandas then numpy
-    features = torch.tensor((torch.load(features))).to('cuda:0')
+    features = torch.tensor((torch.load(features)))#.to('cuda:0')
     labels = (pd.read_csv(labels, header=None)).to_numpy()
     # region dataloaders
     LOG.info("Creating dataloaders")
-    labels = torch.tensor(labels, dtype=torch.float).to('cuda:0')
+    labels = torch.tensor(labels, dtype=torch.float)#.to('cuda:0')
 
     labels=labels.squeeze()
     labels=labels.squeeze()

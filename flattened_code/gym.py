@@ -155,20 +155,18 @@ class Trainer:
 
                 # metrics
                 loss_sum += loss_batch
-                predictions = torch.argmax(input=logits, dim=1, keepdim=False)
+                predictions = (logits>0.5).float() # https://discuss.pytorch.org/t/bcewithlogitsloss-and-model-accuracy-calculation/59293
                 try:  # only compute accuracy for classification tasks
-                    correct_sum += (
-                        (predictions == labels).type(torch.float).sum().item()
-                    )
+                    correct_sum += (predictions == labels).float().sum()
                 except RuntimeError:
-                    correct_sum = 0
+                    correct_sum += 0
 
                 i += 1
                 if i >= samples:
                     break
 
-        loss = loss_sum / len(dataloader)
-        acc = correct_sum / len(dataloader)
+        loss = loss_sum / (samples * 20) # 20 is sequence length
+        acc = correct_sum / (samples * 20) # 20 is sequence length
 
         return loss, acc
 
@@ -194,15 +192,16 @@ class Trainer:
             logits = self.model(inputs)
             loss_batch = self.criterion(logits, labels)
 
-        loss_train = loss_batch / self.dataloader_train.batch_size
+        loss_train = loss_batch / (self.dataloader_train.batch_size * labels.shape[1])
 
         # train accuracy
-        predictions = torch.argmax(input=logits, dim=1, keepdim=False)
+        predictions = (logits>0.5).float() # https://discuss.pytorch.org/t/bcewithlogitsloss-and-model-accuracy-calculation/59293
+
         try:  # only compute accuracy for classification tasks
-            correct_sum = (predictions == labels).type(torch.float).sum().item()
+            correct_sum = (predictions == labels).float().sum()
         except RuntimeError:
-            correct_sum = 0
-        acc_train = correct_sum / self.dataloader_train.batch_size
+            correct_sum = 0        
+        acc_train = correct_sum / (self.dataloader_train.batch_size * labels.shape[1])
 
         # test metrics
         loss_test, acc_test = self.test(dataloader=self.dataloader_test)

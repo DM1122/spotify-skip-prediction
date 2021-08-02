@@ -41,7 +41,7 @@ dataloader_valid= rnn_data_loader.read_rnn_dataloaders('encoded_features', 'labe
 
 # model definiton
 LOG.info("Instantiating model")
-model = models.RNN(input_size=4, hidden_size=16, num_rnn_layers=1, output_size=1).to(
+model = models.RNN(input_size=4, hidden_size=64, num_rnn_layers=1, output_size=1).to(
     device
 )
 model=model.double()
@@ -53,8 +53,8 @@ summary = torchinfo.summary(
 )
 LOG.info(f"Model:\n{summary}")
 
-optimizer = torch.optim.Adam(params=model.parameters(), lr=0.13832)
-criterion = torch.nn.MSELoss(reduction="sum")
+optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
+criterion = torch.nn.BCELoss(reduction="sum") # <-------------------------- TODO: change from torch.nn.MSELoss() to torch.nn.BCEWithLogitsLoss() @Eddie
 
 # training
 trainer = gym.Trainer(
@@ -66,7 +66,7 @@ trainer = gym.Trainer(
     device=device,
     logname="test_time_series",
 )
-tb = trainer.train(iterations=100)
+tb = trainer.train(iterations=500)
 tb.close()
 
 loss_valid, acc_valid = trainer.test(dataloader=dataloader_valid)

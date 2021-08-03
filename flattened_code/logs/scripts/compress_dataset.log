@@ -1,0 +1,19 @@
+2021-08-02 11:23:22 [    INFO] Starting dataset compression (compress_dataset.py:33)
+2021-08-02 11:23:22 [    INFO] Using cuda:0 (compress_dataset.py:35)
+2021-08-02 11:23:22 [    INFO] Features training set is ../data/for_encoder/features_train1.csv (autoencoder_data_loaders.py:257)
+2021-08-02 11:23:22 [    INFO] Labels training set is ../data/for_encoder/labels_train1.csv (autoencoder_data_loaders.py:258)
+2021-08-02 11:23:22 [    INFO] Features validation set is ../data/for_encoder/features_valid1.csv (autoencoder_data_loaders.py:259)
+2021-08-02 11:23:22 [    INFO] Labels validation set is ../data/for_encoder/labels_valid1.csv (autoencoder_data_loaders.py:260)
+2021-08-02 11:23:22 [    INFO] Features testing set is ../data/for_encoder/features_test1.csv (autoencoder_data_loaders.py:261)
+2021-08-02 11:23:22 [    INFO] Labels testing set is ../data/for_encoder/labels_test1.csv (autoencoder_data_loaders.py:262)
+2021-08-02 11:23:22 [    INFO] Iteration 1 (autoencoder_data_loaders.py:263)
+2021-08-02 11:23:34 [    INFO] Labels train numpy ((1433599, 1), int64):
+[[0]
+ [0]
+ [0]
+ ...
+ [0]
+ [0]
+ [1]] (autoencoder_data_loaders.py:274)
+2021-08-02 11:23:34 [    INFO] Appending to datasets (autoencoder_data_loaders.py:279)
+2021-08-02 11:23:36 [    INFO] Creating dataloaders (autoencoder_data_loaders.py:331)

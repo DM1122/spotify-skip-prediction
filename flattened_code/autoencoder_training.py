@@ -51,7 +51,7 @@ torch.cuda.empty_cache()
     dataloader_train,
     dataloader_test,
     dataloader_valid,
-) = autoencoder_data_loaders.read_autoencoder_dataloaders(iterator=sys.argv[1] batch_size=128)
+) = autoencoder_data_loaders.read_autoencoder_dataloaders(iterator='1', batch_size=128)
 
 # model definiton
 model = models.AutoEncoder(input_size=28, embed_size=4, radius=1).to(device)

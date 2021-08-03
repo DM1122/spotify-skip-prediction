@@ -142,15 +142,19 @@ class AutoEncoder(torch.nn.Module):
             input_size=input_size,
             output_size=embed_size,
             num_layers=radius,
-            act_hidden=torch.nn.functional.elu,
-            act_final=torch.nn.functional.elu,
+            act_hidden=torch.sigmoid,
+            act_final=torch.sigmoid,
+            #act_hidden=torch.nn.functional.elu,
+            #act_final=torch.nn.functional.elu,
         )
         self.decoder = LinearParametric(
             input_size=embed_size,
             output_size=input_size,
             num_layers=radius,
-            act_hidden=torch.nn.functional.elu,
-            act_final=torch.nn.functional.elu,
+            act_hidden=torch.sigmoid,
+            act_final=torch.sigmoid,
+            #act_hidden=torch.nn.functional.elu,
+            #act_final=torch.nn.functional.elu,
         )
 
     def forward(self, x):

@@ -1,0 +1,70 @@
+2021-08-02 11:18:09 [    INFO] Starting RNN training (rnn_training.py:33)
+2021-08-02 11:18:10 [    INFO] Using cuda:0 (rnn_training.py:35)
+2021-08-02 11:18:10 [    INFO] Features train set is ../data/for_rnn/encoded_features_train1.tensor (rnn_data_loader.py:90)
+2021-08-02 11:18:10 [    INFO] Labels trainset is ../data/for_encoder/labels_train1.csv (rnn_data_loader.py:91)
+2021-08-02 11:18:12 [    INFO] Creating dataloaders (rnn_data_loader.py:97)
+2021-08-02 11:18:12 [   DEBUG] Dataset train:
+<torch.utils.data.dataset.TensorDataset object at 0x0000016784E91388> (rnn_data_loader.py:112)
+2021-08-02 11:18:12 [    INFO] Features test set is ../data/for_rnn/encoded_features_test1.tensor (rnn_data_loader.py:90)
+2021-08-02 11:18:12 [    INFO] Labels testset is ../data/for_encoder/labels_test1.csv (rnn_data_loader.py:91)
+2021-08-02 11:18:12 [    INFO] Creating dataloaders (rnn_data_loader.py:97)
+2021-08-02 11:18:12 [   DEBUG] Dataset test:
+<torch.utils.data.dataset.TensorDataset object at 0x0000016781E91988> (rnn_data_loader.py:112)
+2021-08-02 11:18:12 [    INFO] Features valid set is ../data/for_rnn/encoded_features_valid1.tensor (rnn_data_loader.py:90)
+2021-08-02 11:18:12 [    INFO] Labels validset is ../data/for_encoder/labels_valid1.csv (rnn_data_loader.py:91)
+2021-08-02 11:18:12 [    INFO] Creating dataloaders (rnn_data_loader.py:97)
+2021-08-02 11:18:12 [   DEBUG] Dataset valid:
+<torch.utils.data.dataset.TensorDataset object at 0x0000016781E91F88> (rnn_data_loader.py:112)
+2021-08-02 11:18:12 [    INFO] Instantiating model (rnn_training.py:43)
+2021-08-02 11:18:13 [    INFO] Beginning training session (gym.py:92)
+2021-08-02 11:18:19 [   DEBUG] Iteration 0 stats:
+Samples seen:	0
+Train loss:	1549.063	Test loss:	1568.573
+Train acc:	0.00%	Test acc:	0.00% (gym.py:257)
+2021-08-02 11:18:19 [   DEBUG] Epoch {epoch} commencing (gym.py:103)
+2021-08-02 11:18:25 [   DEBUG] Iteration 10 stats:
+Samples seen:	10
+Train loss:	4.215	Test loss:	6.475
+Train acc:	1400.00%	Test acc:	902.83% (gym.py:257)
+2021-08-02 11:18:30 [   DEBUG] Iteration 20 stats:
+Samples seen:	20
+Train loss:	5.365	Test loss:	5.046
+Train acc:	100.00%	Test acc:	902.83% (gym.py:257)
+2021-08-02 11:18:36 [   DEBUG] Iteration 30 stats:
+Samples seen:	30
+Train loss:	5.467	Test loss:	4.958
+Train acc:	1300.00%	Test acc:	902.83% (gym.py:257)
+2021-08-02 11:18:43 [   DEBUG] Iteration 40 stats:
+Samples seen:	40
+Train loss:	4.994	Test loss:	4.999
+Train acc:	900.00%	Test acc:	902.83% (gym.py:257)
+2021-08-02 11:18:49 [   DEBUG] Iteration 50 stats:
+Samples seen:	50
+Train loss:	3.716	Test loss:	5.025
+Train acc:	300.00%	Test acc:	902.83% (gym.py:257)
+2021-08-02 11:18:55 [   DEBUG] Iteration 60 stats:
+Samples seen:	60
+Train loss:	5.470	Test loss:	5.031
+Train acc:	1100.00%	Test acc:	902.83% (gym.py:257)
+2021-08-02 11:19:01 [   DEBUG] Iteration 70 stats:
+Samples seen:	70
+Train loss:	4.596	Test loss:	5.010
+Train acc:	700.00%	Test acc:	902.83% (gym.py:257)
+2021-08-02 11:19:07 [   DEBUG] Iteration 80 stats:
+Samples seen:	80
+Train loss:	3.862	Test loss:	4.994
+Train acc:	300.00%	Test acc:	902.83% (gym.py:257)
+2021-08-02 11:19:13 [   DEBUG] Iteration 90 stats:
+Samples seen:	90
+Train loss:	4.059	Test loss:	4.992
+Train acc:	400.00%	Test acc:	902.83% (gym.py:257)
+2021-08-02 11:19:19 [   DEBUG] Iteration 100 stats:
+Samples seen:	100
+Train loss:	5.936	Test loss:	4.995
+Train acc:	1400.00%	Test acc:	902.83% (gym.py:257)
+2021-08-02 11:19:25 [   DEBUG] Iteration 100 stats:
+Samples seen:	100
+Train loss:	5.936	Test loss:	4.995
+Train acc:	1400.00%	Test acc:	902.83% (gym.py:257)
+2021-08-02 11:19:31 [    INFO] Validation loss:	5.014	Validation acc:	912.81% (rnn_training.py:73)
+2021-08-02 11:19:31 [    INFO] Saving model to disk (gym.py:273)

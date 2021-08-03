@@ -1,0 +1,37 @@
+2021-08-03 00:38:31 [    INFO] Starting autoencoder tuning (autoencoder_tuning.py:29)
+2021-08-03 00:38:32 [    INFO] Features training set is ../data/for_encoder/features_train1.csv (autoencoder_data_loaders.py:257)
+2021-08-03 00:38:32 [    INFO] Labels training set is ../data/for_encoder/labels_train1.csv (autoencoder_data_loaders.py:258)
+2021-08-03 00:38:32 [    INFO] Features validation set is ../data/for_encoder/features_valid1.csv (autoencoder_data_loaders.py:259)
+2021-08-03 00:38:32 [    INFO] Labels validation set is ../data/for_encoder/labels_valid1.csv (autoencoder_data_loaders.py:260)
+2021-08-03 00:38:32 [    INFO] Features testing set is ../data/for_encoder/features_test1.csv (autoencoder_data_loaders.py:261)
+2021-08-03 00:38:32 [    INFO] Labels testing set is ../data/for_encoder/labels_test1.csv (autoencoder_data_loaders.py:262)
+2021-08-03 00:38:32 [    INFO] Iteration 1 (autoencoder_data_loaders.py:263)
+2021-08-03 00:38:44 [    INFO] Labels train numpy ((1433599, 1), int64):
+[[0]
+ [0]
+ [0]
+ ...
+ [0]
+ [0]
+ [1]] (autoencoder_data_loaders.py:274)
+2021-08-03 00:38:44 [    INFO] Appending to datasets (autoencoder_data_loaders.py:279)
+2021-08-03 00:38:49 [    INFO] Creating dataloaders (autoencoder_data_loaders.py:331)
+2021-08-03 00:38:51 [    INFO] Beginning training session (gym.py:92)
+2021-08-03 01:23:12 [    INFO] Features training set is ../data/for_encoder/features_train1.csv (autoencoder_data_loaders.py:257)
+2021-08-03 01:23:12 [    INFO] Labels training set is ../data/for_encoder/labels_train1.csv (autoencoder_data_loaders.py:258)
+2021-08-03 01:23:12 [    INFO] Features validation set is ../data/for_encoder/features_valid1.csv (autoencoder_data_loaders.py:259)
+2021-08-03 01:23:12 [    INFO] Labels validation set is ../data/for_encoder/labels_valid1.csv (autoencoder_data_loaders.py:260)
+2021-08-03 01:23:12 [    INFO] Features testing set is ../data/for_encoder/features_test1.csv (autoencoder_data_loaders.py:261)
+2021-08-03 01:23:12 [    INFO] Labels testing set is ../data/for_encoder/labels_test1.csv (autoencoder_data_loaders.py:262)
+2021-08-03 01:23:12 [    INFO] Iteration 1 (autoencoder_data_loaders.py:263)
+2021-08-03 01:23:23 [    INFO] Labels train numpy ((1433599, 1), int64):
+[[0]
+ [0]
+ [0]
+ ...
+ [0]
+ [0]
+ [1]] (autoencoder_data_loaders.py:274)
+2021-08-03 01:23:23 [    INFO] Appending to datasets (autoencoder_data_loaders.py:279)
+2021-08-03 01:23:23 [    INFO] Creating dataloaders (autoencoder_data_loaders.py:331)
+2021-08-03 01:23:24 [    INFO] Beginning training session (gym.py:92)

@@ -19,7 +19,7 @@ from tqdm.auto import tqdm
 # project
 import models
 import autoencoder_data_loaders
-import rnn_data_loader
+import direct_rnn_data_loader
 import datalib, plotlib
 
 LOG = logging.getLogger(__name__)
@@ -165,8 +165,10 @@ class Trainer:
                 if i >= samples:
                     break
 
-        loss = loss_sum / (samples * 20) # 20 is sequence length
-        acc = correct_sum / (samples * 20) # 20 is sequence length
+        #loss = loss_sum / (samples * 20) # 20 is sequence length
+        #acc = correct_sum / (samples * 20) # 20 is sequence length
+        loss = loss_sum / (samples) # 20 is sequence length
+        acc = correct_sum / (samples) # 20 is sequence length
 
         return loss, acc
 
@@ -201,7 +203,8 @@ class Trainer:
             correct_sum = (predictions == labels).float().sum()
         except RuntimeError:
             correct_sum = 0        
-        acc_train = correct_sum / (self.dataloader_train.batch_size * labels.shape[1])
+        acc_train = correct_sum / (self.dataloader_train.batch_size)
+        #acc_train = correct_sum / (self.dataloader_train.batch_size * labels.shape[1])
 
         # test metrics
         loss_test, acc_test = self.test(dataloader=self.dataloader_test)
@@ -815,15 +818,15 @@ class Tuner_RNN_Spotify(Tuner):
         ]
 
     def _get_dataloaders(self, params):
-        dataloader_train = rnn_data_loader.read_rnn_dataloaders("encoded_features", "labels", "train", "1", batch_size=int(params[1]))
-        dataloader_test = rnn_data_loader.read_rnn_dataloaders("encoded_features", "labels", "test", "1", batch_size=int(params[1]))
-        dataloader_valid = rnn_data_loader.read_rnn_dataloaders("encoded_features", "labels", "valid", "1", batch_size=int(params[1]))
+        dataloader_train = direct_rnn_data_loader.read_rnn_dataloaders("encoded_features", "labels", "train", "1", batch_size=int(params[1]))
+        dataloader_test = direct_rnn_data_loader.read_rnn_dataloaders("encoded_features", "labels", "test", "1", batch_size=int(params[1]))
+        dataloader_valid = direct_rnn_data_loader.read_rnn_dataloaders("encoded_features", "labels", "valid", "1", batch_size=int(params[1]))
 
         return dataloader_train, dataloader_test, dataloader_valid
 
     def _build_model(self, params):
         model = models.RNN(
-            input_size=4, #MODIFIED TO 4 FROM 8
+            input_size=28, #MODIFIED TO 4 FROM 8
             hidden_size=int(params[2]),
             num_rnn_layers=int(params[3]),
             output_size=1,
